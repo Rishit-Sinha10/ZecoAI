@@ -1,6 +1,9 @@
-import { Copy, Save, Play, Brain, Terminal as TerminalIcon, FileCode } from "lucide-react";
+import { Copy, Save, Play, Brain, Terminal as TerminalIcon, FileCode, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
+import Terminal from "./Terminal";
+import { executeCode } from "../../services/codeAPI";
+import "./Terminal.css";
 
 /**
  * CodeEditor Component
@@ -10,6 +13,7 @@ import Editor from "@monaco-editor/react";
  * - Auto language detection based on file extension
  * - Auto-save to localStorage
  * - Code copy, save, and run functions
+ * - Real-time code execution with terminal output
  * - AI chat integration
  */
 
@@ -57,37 +61,13 @@ const detectLanguage = (filename) => {
 function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
   const [isSaved, setIsSaved] = useState(true);
   const [editorContent, setEditorContent] = useState("");
-  const [language, setLanguage] = useState({
-    js: "javascript",
-    jsx: "javascript",
-    ts: "typescript",
-    tsx: "typescript",
-    py: "python",
-    java: "java",
-    cpp: "cpp",
-    c: "c",
-    cs: "csharp",
-    rb: "ruby",
-    go: "go",
-    rs: "rust",
-    php: "php",
-    swift: "swift",
-    kt: "kotlin",
-    sql: "sql",
-    html: "html",
-    css: "css",
-    scss: "scss",
-    json: "json",
-    xml: "xml",
-    yaml: "yaml",
-    yml: "yaml",
-    markdown: "markdown",
-    md: "markdown",
-    sh: "shell",
-    bash: "shell",
-    zsh: "shell",
-});
+  const [language, setLanguage] = useState("javascript");
   const [selectedCode, setSelectedCode] = useState("");
+  const [showTerminal, setShowTerminal] = useState(false);
+  const [terminalOutput, setTerminalOutput] = useState("");
+  const [terminalError, setTerminalError] = useState("");
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionTime, setExecutionTime] = useState(0);
 
   /**
    * Update editor content and detect language when active file changes
@@ -151,15 +131,50 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
     setIsSaved(true);
     alert("Project saved successfully!");
   };
-   const handlecode=()=>{
-    const [code,setcode]=useState();
 
-   }
   /**
-   * Run the code (simulated)
+   * Run the code and display output in terminal
    */
-  const handleRun = () => {
-    alert(`Running project: ${project?.name}\n\nOutput:\nCode executed successfully!`);
+  const handleRun = async () => {
+    if (!editorContent.trim()) {
+      alert("No code to execute");
+      return;
+    }
+
+    setShowTerminal(true);
+    setIsExecuting(true);
+    setTerminalOutput("");
+    setTerminalError("");
+    setExecutionTime(0);
+
+    const startTime = Date.now();
+    
+    try {
+      const result = await executeCode(editorContent, language);
+      const endTime = Date.now();
+      
+      setExecutionTime(endTime - startTime);
+
+      if (result.success) {
+        setTerminalOutput(result.output || "Code executed successfully with no output");
+        setTerminalError("");
+      } else {
+        setTerminalError(result.error || "Execution failed");
+        setTerminalOutput("");
+      }
+    } catch (error) {
+      setTerminalError(error.message || "Unknown error occurred");
+      setTerminalOutput("");
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  /**
+   * Close terminal
+   */
+  const handleCloseTerminal = () => {
+    setShowTerminal(false);
   };
 
   if (!activeFile) {
@@ -261,27 +276,20 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
           />
         </div>
 
-        {/* Terminal/Output */}
-        <div className="flex-1 flex flex-col bg-black rounded-lg border border-zinc-800 overflow-hidden">
-          {/* Terminal Header */}
-          <div className="flex items-center gap-2 bg-zinc-800 px-4 py-3 border-b border-zinc-700">
-            <TerminalIcon size={16} className="text-green-400" />
-            <span className="text-sm font-semibold text-white">Terminal Output</span>          </div>
-
-          {/* Terminal Content */}
-          <div className="flex-1 bg-black text-green-400 font-mono text-sm p-6 overflow-y-auto space-y-2">
-            <div className="text-cyan-400">$ zeco-ai --run {activeFile.name}</div>
-            <div className="text-yellow-400">⚡ Executing file...</div>
-            <div className="text-green-400">✓ File loaded successfully</div>
-            <div className="mt-4">
-              <span className="text-cyan-400">$ </span>
-              <span className="animate-pulse">_</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Terminal/Output */}
+      {showTerminal && (
+        <Terminal
+          output={terminalOutput}
+          error={terminalError}
+          isLoading={isExecuting}
+          onClose={handleCloseTerminal}
+          executionTime={executionTime}
+        />
+      )}
     </div>
-  );
-}
+    </div>
+  )
+};
+
 
 export default CodeEditor;

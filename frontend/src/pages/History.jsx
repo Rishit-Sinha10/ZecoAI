@@ -13,28 +13,80 @@ function History() {
   const [error, setError] = useState(null);
   // Fetch all chats
   useEffect(() => {
-    if (!isLoaded || !userId) return;
-    const fetchChats = async () => {
-      try {
-        const token = await getToken();
+    if (!isLoaded) {
+      console.log("[CHAT_HISTORY] Auth not loaded yet");
+      return;
+    }
 
-        const res = await fetch("http://localhost:3000/api/chats", {
+    if (!userId) {
+      console.error("[CHAT_HISTORY] ❌ No userId! User not logged in");
+      setError("Not logged in. Please sign in with Clerk.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchChats = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        console.log("[CHAT_HISTORY] ---------- STARTING FETCH ----------");
+        console.log("[CHAT_HISTORY] Frontend userId:", userId);
+        
+        // Get token
+        console.log("[CHAT_HISTORY] Getting Clerk token...");
+        const token = await getToken();
+        
+        if (!token) {
+          throw new Error("Failed to get Clerk token. You may not be logged in.");
+        }
+        
+        console.log("[CHAT_HISTORY] ✅ Token received");
+        console.log("[CHAT_HISTORY] Token (first 50 chars):", token.substring(0, 50) + "...");
+
+        // Make request
+        const fetchUrl = `http://localhost:3000/api/chats`;
+        console.log("[CHAT_HISTORY] Making request to:", fetchUrl);
+        console.log("[CHAT_HISTORY] Authorization header:", `Bearer ${token.substring(0, 50)}...`);
+
+        const res = await fetch(fetchUrl, {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
 
-        if (!res.ok) throw new Error("Failed to fetch chats");
+        console.log("[CHAT_HISTORY] Response received");
+        console.log("[CHAT_HISTORY] Status code:", res.status);
+        console.log("[CHAT_HISTORY] Status text:", res.statusText);
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: res.statusText }));
+          console.error("[CHAT_HISTORY] ❌ Server returned error:", errorData);
+          throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+        }
 
         const data = await res.json();
-        console.log(data);
+        console.log("[CHAT_HISTORY] ✅ Response parsed successfully");
+        console.log("[CHAT_HISTORY] Chats received:", data.chats?.length || 0);
 
+        // Set chats from response
+        const chatsList = Array.isArray(data?.chats) ? data.chats : [];
+        setChats(chatsList);
+        setLoading(false);
+        console.log("[CHAT_HISTORY] ---------- FETCH COMPLETE ✅ ----------");
       } catch (err) {
-        console.error("Error fetching chats:", err);
+        console.error("[CHAT_HISTORY] ---------- FETCH FAILED ❌ ----------");
+        console.error("[CHAT_HISTORY] Error message:", err.message);
+        console.error("[CHAT_HISTORY] Full error object:", err);
+        setError(err.message || "Failed to load chats");
+        setLoading(false);
+        setChats([]);
       }
-      fetchChats();
     };
-  }, [isLoaded, userId]);
+
+    fetchChats();
+  }, [isLoaded, userId, getToken]);
 
   // Format date
   const formatDate = (date) => {
@@ -54,7 +106,7 @@ function History() {
 
     try {
       const token = await getToken();
-      const response = await fetch(`http://localhost:3000/api/chats/${chatId}?userId=${userId}`, {
+      const response = await fetch(`http://localhost:3000/api/chats/${chatId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

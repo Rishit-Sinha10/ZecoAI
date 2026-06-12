@@ -268,7 +268,7 @@ export default function AboutUs() {
             <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center">
               <Brain size={14} className="text-black" />
             </div>
-            <span className="display-font font-bold text-sm tracking-tight">NexusAI</span>
+            <span className="display-font font-bold text-sm tracking-tight">ZecoAI</span>
             <Badge className="border-emerald-500/30 text-emerald-400 bg-emerald-400/5 ml-2 hidden sm:inline-flex">
               v2.0 Beta
             </Badge>
@@ -308,7 +308,7 @@ export default function AboutUs() {
           </div>
           <Separator />
           <h1 className="display-font leading-none mb-6 fade-up-2">
-            <span className="block text-6xl sm:text-8xl lg:text-9xl text-black">Nexus</span>
+            <span className="block text-6xl sm:text-8xl lg:text-9xl text-black">Zeco</span>
             <span
               className="block text-6xl sm:text-8xl lg:text-9xl"
               style={{
@@ -353,7 +353,7 @@ export default function AboutUs() {
               <span className="text-zinc-500">not just possibility.</span>
             </h2>
             <p className="text-zinc-400 leading-relaxed mb-6">
-              NexusAI started from a simple frustration: integrating AI into real applications shouldn't require
+              Zeco AI started from a simple frustration: integrating AI into real applications shouldn't require
               a PhD or a $2M infrastructure budget. We built the platform we wished existed.
             </p>
             <p className="text-zinc-500 leading-relaxed text-sm">
@@ -408,7 +408,7 @@ export default function AboutUs() {
       <section className="max-w-6xl mx-auto px-6 py-28">
         <div className="text-center mb-16">
           <Badge className="border-blue-500/30 text-blue-400 bg-blue-400/5 mb-6">Technology</Badge>
-          <h2 className="display-font font-bold text-4xl sm:text-5xl text-white mb-4">
+          <h2 className="display-font font-bold text-4xl sm:text-5xl text-black mb-4">
             The Stack Behind the Magic
           </h2>
           <p className="text-zinc-500 text-sm max-w-xl mx-auto">
@@ -476,7 +476,7 @@ export default function AboutUs() {
             All You Need to Ship AI
           </h2>
           <p className="text-zinc-500 text-sm max-w-xl mx-auto">
-            From authentication to autonomous agents. NexusAI handles the hard parts so you can focus on your product.
+            From authentication to autonomous agents. ZecoAI handles the hard parts so you can focus on your product.
           </p>
         </div>
 
@@ -521,7 +521,7 @@ export default function AboutUs() {
               {
                 num: "02",
                 title: "Open Source Philosophy",
-                text: "AI is too important to be proprietary. Every line of NexusAI is open, auditable, and community-driven. No vendor lock-in. Ever.",
+                text: "AI is too important to be proprietary. Every line of ZecoAI is open, auditable, and community-driven. No vendor lock-in. Ever.",
               },
               {
                 num: "03",
@@ -546,7 +546,7 @@ export default function AboutUs() {
             <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
               <Brain size={10} className="text-black" />
             </div>
-            <span className="display-font font-bold text-sm text-zinc-400">NexusAI</span>
+            <span className="display-font font-bold text-sm text-zinc-400">ZecoAI</span>
           </div>
           <p className="text-zinc-600 text-xs">
             · Built with ♥ by the Rishit
