@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import {
@@ -37,7 +42,13 @@ const Badge = ({ children, className = "" }) => (
   </span>
 );
 
-const Button = ({ children, className = "", variant = "primary", href, onClick }) => {
+const Button = ({
+  children,
+  className = "",
+  variant = "primary",
+  href,
+  onClick,
+}) => {
   const base =
     "inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer";
   const variants = {
@@ -49,14 +60,21 @@ const Button = ({ children, className = "", variant = "primary", href, onClick }
   };
   const Tag = href ? "a" : "button";
   return (
-    <Tag href={href} target={href ? "_blank" : undefined} onClick={onClick} className={`${base} ${variants[variant]} ${className}`}>
+    <Tag
+      href={href}
+      target={href ? "_blank" : undefined}
+      onClick={onClick}
+      className={`${base} ${variants[variant]} ${className}`}
+    >
       {children}
     </Tag>
   );
 };
 
 const Card = ({ children, className = "" }) => (
-  <div className={`rounded-xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-sm ${className}`}>
+  <div
+    className={`rounded-xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-sm ${className}`}
+  >
     {children}
   </div>
 );
@@ -217,8 +235,10 @@ export default function AboutUs() {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.3 }
+      ([entry]) => {
+        if (entry.isIntersecting) setStatsVisible(true);
+      },
+      { threshold: 0.3 },
     );
     const el = document.getElementById("stats-section");
     if (el) observer.observe(el);
@@ -268,7 +288,9 @@ export default function AboutUs() {
             <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center">
               <Brain size={14} className="text-black" />
             </div>
-            <span className="display-font font-bold text-sm tracking-tight">ZecoAI</span>
+            <span className="display-font font-bold text-sm tracking-tight">
+              ZecoAI
+            </span>
             <Badge className="border-emerald-500/30 text-emerald-400 bg-emerald-400/5 ml-2 hidden sm:inline-flex">
               v2.0 Beta
             </Badge>
@@ -276,16 +298,28 @@ export default function AboutUs() {
           <div className="flex items-center gap-3">
             <SignedOut>
               <SignInButton mode="modal">
-                <Button variant="ghost" className="text-xs">Login</Button>
+                <Button variant="ghost" className="text-xs">
+                  Login
+                </Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
               <UserButton />
             </SignedIn>
-            <Button variant="ghost" className="text-xs hidden sm:inline-flex">Demo</Button>
-            <Button variant="ghost" className="text-xs hidden sm:inline-flex">Docs</Button>
-            <Button variant="ghost" className="text-xs hidden sm:inline-flex">Blog</Button>
-            <Button variant="outline" href="https://github.com/ramesh1234-ai/HeartSync" className="text-xs py-2 px-4">
+            <Button variant="ghost" className="text-xs hidden sm:inline-flex">
+              Demo
+            </Button>
+            <Button variant="ghost" className="text-xs hidden sm:inline-flex">
+              Docs
+            </Button>
+            <Button variant="ghost" className="text-xs hidden sm:inline-flex">
+              Blog
+            </Button>
+            <Button
+              variant="outline"
+              href="https://github.com/ramesh1234-ai/ZecoAI"
+              className="text-xs py-2 px-4"
+            >
               <Github size={14} /> GitHub
             </Button>
           </div>
@@ -298,8 +332,14 @@ export default function AboutUs() {
         <div className="absolute inset-0 grid-bg opacity-60" />
         {/* Glow orbs */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/8 blur-[120px] glow-pulse" />
-        <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] rounded-full bg-purple-500/6 blur-[80px] glow-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/3 right-1/4 w-[250px] h-[250px] rounded-full bg-blue-500/6 blur-[80px] glow-pulse" style={{ animationDelay: "2s" }} />
+        <div
+          className="absolute top-1/3 left-1/4 w-[300px] h-[300px] rounded-full bg-purple-500/6 blur-[80px] glow-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+        <div
+          className="absolute top-1/3 right-1/4 w-[250px] h-[250px] rounded-full bg-blue-500/6 blur-[80px] glow-pulse"
+          style={{ animationDelay: "2s" }}
+        />
         <div className="relative max-w-5xl mx-auto px-6 text-center">
           <div className="fade-up-1">
             <Badge className="border-emerald-500/40 text-emerald-400 bg-emerald-400/5 mb-8">
@@ -308,11 +348,14 @@ export default function AboutUs() {
           </div>
           <Separator />
           <h1 className="display-font leading-none mb-6 fade-up-2">
-            <span className="block text-6xl sm:text-8xl lg:text-9xl text-black">Zeco</span>
+            <span className="block text-6xl sm:text-8xl lg:text-9xl text-black">
+              Zeco
+            </span>
             <span
               className="block text-6xl sm:text-8xl lg:text-9xl"
               style={{
-                background: "linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6)",
+                background:
+                  "linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -321,16 +364,25 @@ export default function AboutUs() {
               AI
             </span>
           </h1>
-          <p className="text-zinc-400 text-lg sm:text-xl max-w-2xl mx-auto mb-4 fade-up-3" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p
+            className="text-zinc-400 text-lg sm:text-xl max-w-2xl mx-auto mb-4 fade-up-3"
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
             The full-stack AI application platform that{" "}
-            <span className="text-black font-semibold">developers actually love</span> to build on.
+            <span className="text-black font-semibold">
+              developers actually love
+            </span>{" "}
+            to build on.
           </p>
           <p className="text-zinc-600 text-sm max-w-xl mx-auto mb-10 fade-up-3">
-            Built with MongoDB · Express.js · React.js · Node.js and integrated with cutting-edge LLMs.
-            Ship AI features in days, not months.
+            Built with MongoDB · Express.js · React.js · Node.js and integrated
+            with cutting-edge LLMs. Ship AI features in days, not months.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 fade-up-4">
-            <Button href="https://github.com/ramesh1234-ai/HeartSync" className="text-sm">
+            <Button
+              href="https://github.com/ramesh1234-ai/ZecoAI"
+              className="text-sm"
+            >
               <Github size={16} /> Star on GitHub
               <ArrowRight size={14} />
             </Button>
@@ -349,16 +401,19 @@ export default function AboutUs() {
               Our Foundation
             </Badge>
             <h2 className="display-font font-bold text-4xl sm:text-5xl text-black mb-6 leading-tight">
-              Built with purpose,<br />
+              Built with purpose,
+              <br />
               <span className="text-zinc-500">not just possibility.</span>
             </h2>
             <p className="text-zinc-400 leading-relaxed mb-6">
-              Zeco AI started from a simple frustration: integrating AI into real applications shouldn't require
-              a PhD or a $2M infrastructure budget. We built the platform we wished existed.
+              Zeco AI started from a simple frustration: integrating AI into
+              real applications shouldn't require a PhD or a $2M infrastructure
+              budget. We built the platform we wished existed.
             </p>
             <p className="text-zinc-500 leading-relaxed text-sm">
-              Every design decision prioritizes developer experience, production reliability, and
-              ethical AI deployment. We believe the best AI tools are the ones that get out of your way.
+              Every design decision prioritizes developer experience, production
+              reliability, and ethical AI deployment. We believe the best AI
+              tools are the ones that get out of your way.
             </p>
           </div>
 
@@ -386,14 +441,25 @@ export default function AboutUs() {
                 text: "Radical transparency, open-source collaboration, privacy by default, and genuine care for the developer community we serve.",
               },
             ].map((item) => (
-              <Card key={item.label} className={`p-5 border ${item.bg} card-hover`}>
+              <Card
+                key={item.label}
+                className={`p-5 border ${item.bg} card-hover`}
+              >
                 <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${item.bg} border flex-shrink-0`}>
+                  <div
+                    className={`p-2 rounded-lg ${item.bg} border flex-shrink-0`}
+                  >
                     <item.icon size={16} className={item.color} />
                   </div>
                   <div>
-                    <div className={`text-xs font-bold tracking-widest uppercase ${item.color} mb-1.5`}>{item.label}</div>
-                    <p className="text-zinc-400 text-sm leading-relaxed">{item.text}</p>
+                    <div
+                      className={`text-xs font-bold tracking-widest uppercase ${item.color} mb-1.5`}
+                    >
+                      {item.label}
+                    </div>
+                    <p className="text-zinc-400 text-sm leading-relaxed">
+                      {item.text}
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -407,12 +473,15 @@ export default function AboutUs() {
       {/* ── TECH STACK ── */}
       <section className="max-w-6xl mx-auto px-6 py-28">
         <div className="text-center mb-16">
-          <Badge className="border-blue-500/30 text-blue-400 bg-blue-400/5 mb-6">Technology</Badge>
+          <Badge className="border-blue-500/30 text-blue-400 bg-blue-400/5 mb-6">
+            Technology
+          </Badge>
           <h2 className="display-font font-bold text-4xl sm:text-5xl text-black mb-4">
             The Stack Behind the Magic
           </h2>
           <p className="text-zinc-500 text-sm max-w-xl mx-auto">
-            Every technology chosen for a reason. Battle-tested at scale, beloved by developers.
+            Every technology chosen for a reason. Battle-tested at scale,
+            beloved by developers.
           </p>
         </div>
 
@@ -422,10 +491,11 @@ export default function AboutUs() {
             <button
               key={tech.name}
               onClick={() => setActiveTab(i)}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border ${activeTab === i
-                ? `${tech.bg} ${tech.border} ${tech.color}`
-                : "border-white-800 text-black-500 hover:text-black-300 hover:border-white-600"
-                }`}
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border ${
+                activeTab === i
+                  ? `${tech.bg} ${tech.border} ${tech.color}`
+                  : "border-white-800 text-black-500 hover:text-black-300 hover:border-white-600"
+              }`}
             >
               {tech.name}
             </button>
@@ -435,32 +505,57 @@ export default function AboutUs() {
         {/* Active tech detail */}
         <Card className="p-6 mb-10 border-zinc-700/50">
           <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl ${TECH_STACK[activeTab].bg} border ${TECH_STACK[activeTab].border}`}>
-              {(() => { const Icon = TECH_STACK[activeTab].icon; return <Icon size={24} className={TECH_STACK[activeTab].color} />; })()}
+            <div
+              className={`p-3 rounded-xl ${TECH_STACK[activeTab].bg} border ${TECH_STACK[activeTab].border}`}
+            >
+              {(() => {
+                const Icon = TECH_STACK[activeTab].icon;
+                return (
+                  <Icon size={24} className={TECH_STACK[activeTab].color} />
+                );
+              })()}
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <span className="display-font font-bold text-lg text-black">{TECH_STACK[activeTab].name}</span>
-                <Badge className={`border ${TECH_STACK[activeTab].border} ${TECH_STACK[activeTab].color} ${TECH_STACK[activeTab].bg} text-[10px]`}>
+                <span className="display-font font-bold text-lg text-black">
+                  {TECH_STACK[activeTab].name}
+                </span>
+                <Badge
+                  className={`border ${TECH_STACK[activeTab].border} ${TECH_STACK[activeTab].color} ${TECH_STACK[activeTab].bg} text-[10px]`}
+                >
                   {TECH_STACK[activeTab].role}
                 </Badge>
               </div>
-              <p className="text-white-400 text-sm">{TECH_STACK[activeTab].desc}</p>
+              <p className="text-white-400 text-sm">
+                {TECH_STACK[activeTab].desc}
+              </p>
             </div>
           </div>
         </Card>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {TECH_STACK.map((tech) => (
-            <Card key={tech.name} className={`p-5 border ${tech.border} card-hover group cursor-pointer`} onClick={() => setActiveTab(TECH_STACK.indexOf(tech))}>
+            <Card
+              key={tech.name}
+              className={`p-5 border ${tech.border} card-hover group cursor-pointer`}
+              onClick={() => setActiveTab(TECH_STACK.indexOf(tech))}
+            >
               <div className="flex items-center gap-3 mb-3">
-                <div className={`p-2 rounded-lg ${tech.bg} border ${tech.border}`}>
+                <div
+                  className={`p-2 rounded-lg ${tech.bg} border ${tech.border}`}
+                >
                   <tech.icon size={16} className={tech.color} />
                 </div>
-                <span className={`font-semibold text-sm ${tech.color}`}>{tech.name}</span>
-                <span className="text-zinc-600 text-xs ml-auto">{tech.role}</span>
+                <span className={`font-semibold text-sm ${tech.color}`}>
+                  {tech.name}
+                </span>
+                <span className="text-zinc-600 text-xs ml-auto">
+                  {tech.role}
+                </span>
               </div>
-              <p className="text-black-500 text-xs leading-relaxed">{tech.desc}</p>
+              <p className="text-black-500 text-xs leading-relaxed">
+                {tech.desc}
+              </p>
             </Card>
           ))}
         </div>
@@ -471,12 +566,15 @@ export default function AboutUs() {
       {/* ── FEATURES ── */}
       <section className="max-w-6xl mx-auto px-6 py-28">
         <div className="text-center mb-16">
-          <Badge className="border-emerald-500/30 text-emerald-400 bg-emerald-400/5 mb-6">Features</Badge>
+          <Badge className="border-emerald-500/30 text-emerald-400 bg-emerald-400/5 mb-6">
+            Features
+          </Badge>
           <h2 className="display-font font italic text-2xl sm:text-5xl text-black mb-4">
             All You Need to Ship AI
           </h2>
           <p className="text-zinc-500 text-sm max-w-xl mx-auto">
-            From authentication to autonomous agents. ZecoAI handles the hard parts so you can focus on your product.
+            From authentication to autonomous agents. ZecoAI handles the hard
+            parts so you can focus on your product.
           </p>
         </div>
 
@@ -486,12 +584,18 @@ export default function AboutUs() {
               key={f.title}
               className={`p-5 group card-hover cursor-default transition-colors duration-200 ${f.accent}`}
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-zinc-800 group-hover:scale-110 transition-transform duration-200`}>
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-zinc-800 group-hover:scale-110 transition-transform duration-200`}
+              >
                 <f.icon size={18} className={f.color} />
               </div>
-              <h3 className="text-white font-semibold text-sm mb-2 display-font">{f.title}</h3>
+              <h3 className="text-white font-semibold text-sm mb-2 display-font">
+                {f.title}
+              </h3>
               <p className="text-black text-xs leading-relaxed">{f.desc}</p>
-              <div className={`mt-4 flex items-center gap-1 text-xs ${f.color} opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
+              <div
+                className={`mt-4 flex items-center gap-1 text-xs ${f.color} opacity-0 group-hover:opacity-100 transition-opacity duration-200`}
+              >
                 Learn more <ChevronRight size={12} />
               </div>
             </Card>
@@ -508,7 +612,8 @@ export default function AboutUs() {
             Why We Built This
           </Badge>
           <h2 className="display-font font-bold text-4xl sm:text-5xl text-black mb-8 leading-tight">
-            AI shouldn't be a black box<br />
+            AI shouldn't be a black box
+            <br />
             <span className="text-zinc-500">reserved for big tech.</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-6 text-left">
@@ -530,9 +635,15 @@ export default function AboutUs() {
               },
             ].map((item) => (
               <Card key={item.num} className="p-6 card-hover">
-                <div className="text-4xl font-bold text-white-800 display-font mb-4">{item.num}</div>
-                <h3 className="text-white font-semibold text-sm mb-3 display-font">{item.title}</h3>
-                <p className="text-black-500 text-xs leading-relaxed">{item.text}</p>
+                <div className="text-4xl font-bold text-white-800 display-font mb-4">
+                  {item.num}
+                </div>
+                <h3 className="text-white font-semibold text-sm mb-3 display-font">
+                  {item.title}
+                </h3>
+                <p className="text-black-500 text-xs leading-relaxed">
+                  {item.text}
+                </p>
               </Card>
             ))}
           </div>
@@ -546,15 +657,28 @@ export default function AboutUs() {
             <div className="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center">
               <Brain size={10} className="text-black" />
             </div>
-            <span className="display-font font-bold text-sm text-zinc-400">ZecoAI</span>
+            <span className="display-font font-bold text-sm text-zinc-400">
+              ZecoAI
+            </span>
           </div>
-          <p className="text-zinc-600 text-xs">
-            · Built with ♥ by the Rishit
-          </p>
+          <p className="text-zinc-600 text-xs">· Built with ♥ by the Rishit</p>
           <div className="flex gap-4">
-            <a href="#" className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors">Privacy</a>
-            <a href="#" className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors">Terms</a>
-            <a href="https://github.com/ramesh1234-ai/HeartSync" className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors flex items-center gap-1">
+            <a
+              href="#"
+              className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
+            >
+              Privacy
+            </a>
+            <a
+              href="#"
+              className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
+            >
+              Terms
+            </a>
+            <a
+              href="https://github.com/ramesh1234-ai/ZecoAI"
+              className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors flex items-center gap-1"
+            >
               <Github size={12} /> GitHub
             </a>
           </div>

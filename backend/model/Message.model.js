@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema(
   {
     userId: {
-      type: clerkClient, // Clerk userId or your auth userId
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"User", // Clerk userId or your auth userId
       required: true,
       index: true
     },

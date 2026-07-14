@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const codeSchema = new mongoose.Schema({
   userId: {
-    type: required,   // Clerk userId or your auth userId
+    type: String,
+    required:true,   // Clerk userId or your auth userId
     required: true,
     index: true
   },
