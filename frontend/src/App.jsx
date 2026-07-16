@@ -8,11 +8,9 @@ import Projects from './components/pages/project'
 import Editor from './components/editor/Editor'
 import History from './pages/History'
 import ChatDetail from './pages/ChatDetail'
-import { Analytics } from "@vercel/analytics/next";
 function App() {
   return (
     <AuthProvider>
-      <Analytics/>
       <Routes>
         <Route path="/" element={<AboutUs />} />
         <Route path="/chat" element={<ChatWindow />} />
