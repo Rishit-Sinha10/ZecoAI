@@ -27,13 +27,14 @@ function FileTabs({ files, activeFileId, onSelectFile, onCloseFile, unsavedFiles
       style={{ backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border)" }}
     >
       {files.map((file) => {
-        const isActive = activeFileId === file.id;
-        const isUnsaved = unsavedFiles?.includes(file.id);
+        const fid = file._id || file.id;
+        const isActive = activeFileId === fid;
+        const isUnsaved = unsavedFiles?.includes(fid);
 
         return (
           <div
-            key={file.id}
-            onClick={() => onSelectFile(file.id)}
+            key={fid}
+            onClick={() => onSelectFile(fid)}
             className="group relative flex items-center gap-2 px-3 h-9 cursor-pointer transition-colors duration-100"
             style={{
               backgroundColor: isActive ? "var(--bg-primary)" : "transparent",
@@ -52,7 +53,7 @@ function FileTabs({ files, activeFileId, onSelectFile, onCloseFile, unsavedFiles
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onSelectFile(file.id);
+                onSelectFile(fid);
               }
             }}
           >
@@ -74,7 +75,7 @@ function FileTabs({ files, activeFileId, onSelectFile, onCloseFile, unsavedFiles
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onCloseFile(file.id);
+                onCloseFile(fid);
               }}
               className="p-0.5 rounded transition-all opacity-0 group-hover:opacity-100"
               style={{

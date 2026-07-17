@@ -6,6 +6,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
+  Terminal,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
@@ -14,6 +15,7 @@ const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { title: "Projects", icon: FolderCode, to: "/projects" },
   { title: "Chat", icon: MessageSquare, to: "/chat" },
+  { title: "Runs", icon: Terminal, to: "/runs" },
   { title: "Settings", icon: Settings, to: "/settings" },
 ];
 

@@ -14,18 +14,33 @@ import {
 } from "lucide-react";
 import Navbar from "../common/navbar";
 import Sidebar from "../common/sidebar";
+import useAuth from "../../hooks/useAuth";
+import { getUserProjectsAPI } from "../../services/projectAPI";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+  const { isSignedIn, getToken } = useAuth();
 
   useEffect(() => {
-    setProjects(JSON.parse(localStorage.getItem("projects")) || []);
-  }, []);
+    const loadProjects = async () => {
+      if (isSignedIn) {
+        try {
+          const data = await getUserProjectsAPI(getToken);
+          setProjects(data);
+        } catch {
+          setProjects(JSON.parse(localStorage.getItem("projects")) || []);
+        }
+      } else {
+        setProjects(JSON.parse(localStorage.getItem("projects")) || []);
+      }
+    };
+    loadProjects();
+  }, [isSignedIn, getToken]);
 
   const totalFiles = projects.reduce((sum, p) => sum + (p.files?.length || 0), 0);
   const recentProjects = [...projects]
-    .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
+    .sort((a, b) => new Date(b.updatedAt || b.lastModified) - new Date(a.updatedAt || a.lastModified))
     .slice(0, 5);
 
   const langCounts = {};
@@ -167,8 +182,8 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     {recentProjects.map((project) => (
                       <button
-                        key={project.id}
-                        onClick={() => navigate(`/editor/${project.id}`)}
+                        key={project._id || project.id}
+                        onClick={() => navigate(`/editor/${project._id || project.id}`)}
                         className="w-full flex items-center gap-4 rounded-xl p-4 transition-all hover:scale-[1.01] text-left"
                         style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}
                       >
@@ -188,7 +203,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center gap-1 shrink-0" style={{ color: t.text3 }}>
                           <Clock size={12} />
-                          <span className="text-xs">{fmtTime(project.lastModified)}</span>
+                          <span className="text-xs">{fmtTime(project.updatedAt || project.lastModified)}</span>
                         </div>
                         <ChevronRight size={16} style={{ color: t.text3 }} className="shrink-0" />
                       </button>

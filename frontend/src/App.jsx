@@ -10,6 +10,7 @@ import Projects from './components/pages/project'
 import Editor from './components/editor/Editor'
 import Settings from './components/pages/Settings'
 import History from './pages/History'
+import ExecutionHistory from './pages/ExecutionHistory'
 import ChatDetail from './pages/ChatDetail'
 
 function AppInner() {
@@ -21,6 +22,7 @@ function AppInner() {
         <Route path="/chat" element={<ChatWindow />} />
         <Route path="/chat/:id" element={<ChatDetail />} />
         <Route path="/history" element={<History />} />
+        <Route path="/runs" element={<ExecutionHistory />} />
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/login" element={<Login/>}/>
         <Route path="/projects" element={<Projects/>}/>

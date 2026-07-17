@@ -1,7 +1,7 @@
-import { X, Copy, Download, Trash2 } from "lucide-react";
+import { X, Copy, Download, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-function Terminal({ output, error, isLoading, onClose, executionTime, exitCode, memory }) {
+function Terminal({ output, error, isLoading, onClose, executionTime, exitCode, memory, onFixWithAI, isFixing }) {
   const [copied, setCopied] = useState(false);
   const outputRef = useRef(null);
 
@@ -112,7 +112,24 @@ function Terminal({ output, error, isLoading, onClose, executionTime, exitCode, 
 
         {!isLoading && error && (
           <div className="terminal-block">
-            <span className="terminal-block-label terminal-block-label--error">Error</span>
+            <div className="flex items-center justify-between">
+              <span className="terminal-block-label terminal-block-label--error">Error</span>
+              {onFixWithAI && (
+                <button
+                  onClick={onFixWithAI}
+                  disabled={isFixing}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium transition-colors"
+                  style={{
+                    backgroundColor: isFixing ? "var(--bg-tertiary)" : "rgba(251,191,36,0.1)",
+                    color: isFixing ? "var(--text-tertiary)" : "#fbbf24",
+                    border: "1px solid rgba(251,191,36,0.2)",
+                  }}
+                >
+                  {isFixing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                  {isFixing ? "Fixing..." : "Fix with AI"}
+                </button>
+              )}
+            </div>
             <div className="terminal-error">
               <pre>{error}</pre>
             </div>

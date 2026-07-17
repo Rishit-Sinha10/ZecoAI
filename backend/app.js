@@ -8,6 +8,8 @@ dotenv.config();
 import aiRoutes from "./route/ai.route.js";
 import chatRoutes from "./route/chat.route.js";
 import projectRoutes from "./route/project.route.js";
+import codeHistoryRoutes from "./route/codeHistory.route.js";
+import formatRoutes from "./route/format.route.js";
 import { HandleEdit } from "./controller/edit.controller.js";
 import { HandleCode } from "./controller/code.controller.js";
 import { HandleLanguages } from "./controller/languages.controller.js";
@@ -58,6 +60,8 @@ app.get("/api/debug-auth", (req, res) => {
 app.use("/api/ai", aiRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/runs", codeHistoryRoutes);
+app.use("/api/format", formatRoutes);
 app.use("/api/edit", HandleEdit);
 app.use("/api/run-code", HandleCode);
 app.get("/api/languages", HandleLanguages);

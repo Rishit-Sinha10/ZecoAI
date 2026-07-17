@@ -10,7 +10,7 @@ const getGroqClient = () => {
  */
 export const handleCompletion = async (req, res) => {
   try {
-    const { code, language, cursorPosition, prefix, suffix } = req.body;
+    const { code, language, prefix, suffix } = req.body;
     if (!code && !prefix) {
       return res.status(400).json({
         success: false,
@@ -18,40 +18,39 @@ export const handleCompletion = async (req, res) => {
       });
     }
     const groq = getGroqClient();
-    const prompt = `You are a code completion assistant. Complete the following code naturally and concisely.
+
+    const contextLines = (prefix || "").split("\n");
+    const recentLines = contextLines.slice(-30).join("\n");
+    const afterLines = (suffix || "").split("\n").slice(0, 10).join("\n");
+
+    const prompt = `Complete the code. Return ONLY the completion text, no explanations, no markdown, no backticks.
+
 Language: ${language || "javascript"}
 
-Code context before cursor:
-\`\`\`
-${prefix || ""}
-\`\`\`
+Before cursor:
+${recentLines}
 
-Code context after cursor:
-\`\`\`
-${suffix || ""}
-\`\`\`
+After cursor:
+${afterLines}
 
-Rules:
-- Return ONLY the completion text, no explanations
-- Do not include markdown formatting
-- Complete naturally based on context
-- Keep completion short (1-3 lines max)
-- Match the existing code style`;
+Completion:`;
 
     const message = await groq.chat.completions.create({
       messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
+        { role: "user", content: prompt },
       ],
       model: "llama-3.3-70b-versatile",
-      temperature: 0.2,
-      max_tokens: 150,
-      stop: ["\n\n", "```"],
+      temperature: 0.1,
+      max_tokens: 120,
+      stop: ["\n\n\n", "```", "Explanation:", "Here's", "This code"],
     });
 
-    const completion = message.choices[0].message.content.trim();
+    let completion = message.choices[0].message.content.trim();
+    completion = completion.replace(/^```[\w]*\n?/gm, "").replace(/```$/gm, "").trim();
+
+    if (completion.length > 500) {
+      completion = completion.substring(0, 500);
+    }
 
     res.json({
       success: true,
@@ -144,7 +143,7 @@ export const handleDebug = async (req, res) => {
 
     const groq = getGroqClient();
 
-    const prompt = `You are a debugging assistant. Analyze this code for errors, bugs, and potential issues.
+    const prompt = `You are a debugging assistant. Fix the code based on the error.
 
 Language: ${language || "javascript"}
 
@@ -165,10 +164,11 @@ Return a JSON response with this exact structure:
       "fix": "<suggested fix>"
     }
   ],
-  "summary": "<brief summary of issues found>"
+  "summary": "<brief summary of issues found and fixed>",
+  "fixedCode": "<the complete corrected code, fully working>"
 }
 
-Return ONLY valid JSON, no other text.`;
+IMPORTANT: "fixedCode" must contain the FULL corrected code, not a snippet. Return ONLY valid JSON, no other text.`;
 
     const message = await groq.chat.completions.create({
       messages: [
@@ -179,7 +179,7 @@ Return ONLY valid JSON, no other text.`;
       ],
       model: "llama-3.3-70b-versatile",
       temperature: 0.1,
-      max_tokens: 1024,
+      max_tokens: 4096,
     });
 
     const response = message.choices[0].message.content.trim();
@@ -191,6 +191,7 @@ Return ONLY valid JSON, no other text.`;
       analysis = {
         errors: [],
         summary: response,
+        fixedCode: null,
       };
     }
 

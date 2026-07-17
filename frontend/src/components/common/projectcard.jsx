@@ -7,10 +7,21 @@ export default function ProjectCard({ project, onOpen, onEdit, onDelete, onShare
     border: "var(--border)", borderStrong: "var(--border-strong)", accent: "var(--accent)",
   };
 
+  const createdDate = project.createdAt
+    ? new Date(project.createdAt).toLocaleDateString()
+    : project.id
+      ? new Date(Number(project.id)).toLocaleDateString()
+      : "Unknown";
+
+  const modifiedDate = project.updatedAt
+    ? new Date(project.updatedAt).toLocaleDateString()
+    : project.lastModified
+      ? new Date(project.lastModified).toLocaleDateString()
+      : null;
+
   return (
     <div className="group relative rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg"
       style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}>
-      {/* Header */}
       <div className="px-6 py-6" style={{ borderBottom: `1px solid ${t.border}`, background: "linear-gradient(to right, var(--accent-light), transparent)" }}>
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg" style={{ backgroundColor: "var(--accent-light)" }}>
@@ -23,20 +34,18 @@ export default function ProjectCard({ project, onOpen, onEdit, onDelete, onShare
         </div>
       </div>
 
-      {/* Content */}
       <div className="px-6 py-4 space-y-3">
         <div className="flex items-center gap-2">
           <Code2 size={14} style={{ color: "var(--accent)" }} />
           <span className="text-sm" style={{ color: t.text2 }}>{project.language || "JavaScript"}</span>
         </div>
         <div className="text-sm space-y-1" style={{ color: t.text3 }}>
-          <p>Created: {new Date(project.id).toLocaleDateString()}</p>
-          {project.lastModified && <p>Modified: {new Date(project.lastModified).toLocaleDateString()}</p>}
+          <p>Created: {createdDate}</p>
+          {modifiedDate && <p>Modified: {modifiedDate}</p>}
         </div>
         {project.description && <p className="text-sm line-clamp-2" style={{ color: t.text2 }}>{project.description}</p>}
       </div>
 
-      {/* Actions */}
       <div className="px-6 py-4 flex gap-2" style={{ borderTop: `1px solid ${t.border}` }}>
         <button onClick={() => onOpen?.(project)}
           className="flex-1 text-white text-sm py-2 rounded-lg transition-colors font-medium" style={{ backgroundColor: "var(--accent)" }}>Open</button>
@@ -44,7 +53,7 @@ export default function ProjectCard({ project, onOpen, onEdit, onDelete, onShare
           style={{ border: `1px solid ${t.border}`, color: t.text3 }} title="Share"><Share2 size={16} /></button>
         <button onClick={() => onEdit?.(project)} className="p-2 rounded-lg transition-colors"
           style={{ border: `1px solid ${t.border}`, color: t.text3 }} title="Edit"><Edit2 size={16} /></button>
-        <button onClick={() => onDelete?.(project)} className="p-2 rounded-lg transition-colors"
+        <button onClick={() => onDelete?.(project._id || project.id)} className="p-2 rounded-lg transition-colors"
           style={{ border: `1px solid ${t.border}`, color: t.text3 }} title="Delete"><Trash2 size={16} /></button>
       </div>
     </div>

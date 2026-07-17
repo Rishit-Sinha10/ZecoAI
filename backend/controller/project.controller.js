@@ -66,7 +66,25 @@ export const updateProject = async (req, res) => {
 
     if (name !== undefined) project.name = name.trim();
     if (description !== undefined) project.description = description;
-    if (files !== undefined) project.files = files;
+    if (files !== undefined) {
+      const existingIds = new Set(project.files.map((f) => f._id.toString()));
+      const incomingIds = new Set(files.filter((f) => f._id).map((f) => f._id));
+
+      project.files = project.files.filter((f) => incomingIds.has(f._id.toString()));
+
+      for (const f of files) {
+        if (f._id && existingIds.has(f._id)) {
+          const doc = project.files.id(f._id);
+          if (doc) {
+            doc.name = f.name;
+            doc.content = f.content;
+            doc.isMain = f.isMain;
+          }
+        } else {
+          project.files.push({ name: f.name, content: f.content, isMain: f.isMain });
+        }
+      }
+    }
     if (mainFileId !== undefined) {
       project.files.forEach((f) => {
         f.isMain = f._id.toString() === mainFileId;
@@ -110,10 +128,14 @@ export const exportProject = async (req, res) => {
 
 export const importProjects = async (req, res) => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     const { projects } = req.body;
 
-    if (!Array.isArray(projects)) {
+    if (!Array.isArray(projects) || projects.length === 0) {
       return res.status(400).json({ error: "Invalid import data" });
     }
 
@@ -121,7 +143,7 @@ export const importProjects = async (req, res) => {
     for (const p of projects) {
       const project = await Project.create({
         userId,
-        name: p.name || "Imported Project",
+        name: (p.name || "Imported Project").trim(),
         description: p.description || "",
         files: (p.files || []).map((f) => ({
           name: f.name || "untitled",
@@ -134,7 +156,7 @@ export const importProjects = async (req, res) => {
 
     res.status(201).json({ imported: imported.length, projects: imported });
   } catch (err) {
-    console.error("[PROJECT_IMPORT_ERROR]", err.message);
+    console.error("[PROJECT_IMPORT_ERROR]", err.message, err.stack);
     res.status(500).json({ error: "Failed to import projects" });
   }
 };

@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ;
+const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api`;
 /**
  * Get auth token from Clerk
  */
@@ -17,7 +17,7 @@ const getAuthToken = async (token) => {
  * Call AI API endpoint
  */
 const callAiApi = async (path, body, token) => {
-  const url = `${BASE}/ai${path}`;
+  const url = `${API_BASE}/ai${path}`;
   const authToken = await getAuthToken(token);
 
   const headers = {
@@ -93,9 +93,33 @@ export const analyzeCode = async (code, prompt, token) => {
   );
 };
 
+/**
+ * Format code via backend (for languages needing Node-only Prettier plugins)
+ */
+export const formatCodeAPI = async (code, language, token) => {
+  const authToken = await getAuthToken(token);
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const res = await fetch(`${API_BASE}/format`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ code, language }),
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(error.message || "Format request failed");
+  }
+
+  return res.json();
+};
+
 export default {
   getCompletion,
   generateCode,
   debugCode,
   analyzeCode,
+  formatCodeAPI,
 };
