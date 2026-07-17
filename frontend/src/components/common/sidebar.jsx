@@ -1,118 +1,110 @@
-"use client";
 import { useState } from "react";
 import {
-  Home,
-  Inbox,
-  Calendar,
-  Search,
+  LayoutDashboard,
+  FolderCode,
+  MessageSquare,
   Settings,
-  User,
-  LogOut,
+  PanelLeftClose,
   PanelLeft,
-  History,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
-const items = [
-  { title: "Home", icon: Home },
-  { title: "Inbox", icon: Inbox, badge: 4 },
-  { title: "Calendar", icon: Calendar },
-  { title: "Search", icon: Search },
-  { title: "Settings", icon: Settings},
+
+const navItems = [
+  { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
+  { title: "Projects", icon: FolderCode, to: "/projects" },
+  { title: "Chat", icon: MessageSquare, to: "/chat" },
+  { title: "Settings", icon: Settings, to: "/settings" },
 ];
+
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [active, setActive] = useState("Home");
+  const location = useLocation();
+
   return (
     <aside
       style={{
-        width: collapsed ? "64px" : "140px",
-        transition: "width 220ms cubic-bezier(0.4,0,0.2,1)",
-        fontFamily: "'DM Sans', 'Geist', sans-serif",
+        width: collapsed ? "52px" : "200px",
+        transition: "width 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        backgroundColor: "var(--bg-secondary)",
+        borderRight: "1px solid var(--border)",
       }}
-      className="relative flex flex-col h-screen bg-zinc-900 border-r border-zinc-800 overflow-hidden shrink-0"
+      className="relative flex flex-col h-full overflow-hidden shrink-0"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-1 py-1 border-b border-zinc-800 mt-1">
+      <div
+        className="flex items-center justify-between px-2 py-3"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
         {!collapsed && (
           <span
-            className="text-white font-semibold text-sm tracking-wide truncate pl-1"
-            style={{ opacity: collapsed ? 0 : 1, transition: "opacity 180ms" }}
+            className="text-[11px] font-semibold tracking-wider uppercase pl-2"
+            style={{ color: "var(--text-tertiary)" }}
           >
-            ZecoAI
+            Menu
           </span>
         )}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="ml-auto p-1.5 rounded-md text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors"
-          aria-label="Toggle sidebar"
+          className="p-1 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors ml-auto"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <PanelLeft size={16} />
+          {collapsed ? <PanelLeft size={14} /> : <PanelLeftClose size={14} />}
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-        {!collapsed && (
-          <p className="text-[10px] font-medium text-white/30 uppercase tracking-widest px-2 pb-2 pt-1">
-            Navigation
-          </p>
-        )}
-
-        {items.map(({ title, icon: Icon, badge }) => {
-          const isActive = active === title;
+      <nav className="flex-1 overflow-y-auto py-2 px-1.5 space-y-0.5">
+        {navItems.map(({ title, icon: Icon, to }) => {
+          const isActive = location.pathname === to || location.pathname.startsWith(to + "/");
           return (
-            <button
-              key={title}
-              onClick={() => setActive(title)}
+            <Link
+              key={to}
+              to={to}
               title={collapsed ? title : undefined}
               className={`
-                group relative w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm
-                transition-all duration-150 outline-none
+                relative flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md text-[13px]
+                transition-colors duration-100 outline-none
                 ${
                   isActive
-                    ? "bg-indigo-500/15 text-indigo-300"
-                    : "text-white/50 hover:text-white/90 hover:bg-white/[0.06]"
+                    ? "font-medium"
+                    : "hover:bg-[var(--bg-tertiary)]"
                 }
               `}
+              style={{
+                color: isActive ? "var(--accent)" : "var(--text-secondary)",
+                backgroundColor: isActive ? "var(--accent-light)" : undefined,
+              }}
             >
-              {/* Active indicator bar */}
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-400 rounded-full" />
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
+                  style={{ backgroundColor: "var(--accent)" }}
+                />
               )}
-
               <Icon
                 size={16}
-                className={`shrink-0 ${isActive ? "text-indigo-400" : ""}`}
+                className="shrink-0"
+                style={{ color: isActive ? "var(--accent)" : undefined }}
               />
-
-              {!collapsed && (
-                <span className="flex-1 text-left truncate">{title}</span>
-              )}
-
-              {!collapsed && badge && (
-                <span className="text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded-full">
-                  {badge}
-                </span>
-              )}
-            </button>
+              {!collapsed && <span className="truncate">{title}</span>}
+            </Link>
           );
         })}
       </nav>
 
-      {/* Footer / User Avatar Section */}
-      <div className="border-t border-zinc-800 px-2 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0">
-            <UserButton 
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10",
-                  userButtonPopoverCard: "dark"
-                }
-              }}
-            />
-          </div>
-        </div>
+      {/* Footer */}
+      <div
+        className="px-2 py-3"
+        style={{ borderTop: "1px solid var(--border)" }}
+      >
+        <UserButton
+          appearance={{
+            elements: {
+              avatarBox: "w-8 h-8",
+            },
+          }}
+        />
       </div>
     </aside>
   );

@@ -7,81 +7,105 @@ import {
 } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
 import { Link, useLocation } from "react-router-dom";
+import ThemeToggle from "../ui/ThemeToggle";
 
 export default function Navbar() {
   const location = useLocation();
-  const isEditor = location.pathname.startsWith('/editor/');
+  const isEditor = location.pathname.startsWith("/editor/");
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-zinc-900 border-b border-zinc-800"
+    <header
+      className="fixed top-0 left-0 right-0 z-40 border-b border-[var(--border)]"
       style={{
-        fontFamily: "'DM Sans', 'Geist', sans-serif",
+        backgroundColor: "var(--bg-primary)",
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      <nav className="flex items-center justify-between px-6 py-4 h-16">
-        {/* Logo / Brand */}
+      <nav className="flex items-center justify-between px-6 py-3 h-14">
+        {/* Left: Logo + Back */}
         <div className="flex items-center gap-3">
           {isEditor && (
-            <Link 
+            <Link
               to="/projects"
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-white/60 hover:text-white"
+              className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
               title="Back to Projects"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={16} />
             </Link>
           )}
-          <div className="p-2 bg-indigo-500/10 rounded-lg">
-            <Code2 size={20} className="text-indigo-400" />
-          </div>
-          <span className="font-bold text-white text-lg">ZecoAI</span>
-        </div>
-        {/* Center - Navigation items (Optional) */}
-        <div className="hidden md:flex items-center gap-6">
-          <a href="#" className="text-white/60 hover:text-white text-sm transition-colors">
-            Dashboard
-          </a>
-          <Link to="/projects" className="text-white/60 hover:text-white text-sm transition-colors">
-            Projects
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-md" style={{ backgroundColor: "var(--accent-light)" }}>
+              <Code2 size={18} style={{ color: "var(--accent)" }} />
+            </div>
+            <span
+              className="font-semibold text-sm tracking-tight"
+              style={{ color: "var(--text-primary)" }}
+            >
+              ZecoAI
+            </span>
           </Link>
-          <Link to="/history" className="text-white/60 hover:text-white text-sm transition-colors">
-            history
-          </Link>
-          <a href="#" className="text-white/60 hover:text-white text-sm transition-colors">
-            Help
-          </a>
         </div>
 
-        {/* Right - Actions & Avatar */}
-        <div className="flex items-center gap-4">
-          {/* Notification Icon */}
-          <button className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
-            <Bell size={18} />
+        {/* Center: Nav */}
+        <div className="hidden md:flex items-center gap-1">
+          {[
+            { label: "Dashboard", to: "/dashboard" },
+            { label: "Projects", to: "/projects" },
+            { label: "Chat", to: "/chat" },
+            { label: "History", to: "/history" },
+          ].map((item) => {
+            const isActive = location.pathname === item.to;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+                  isActive
+                    ? "text-[var(--text-primary)] bg-[var(--bg-tertiary)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+
+          <div className="w-px h-4 bg-[var(--border)] mx-1" />
+
+          <button
+            className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+            aria-label="Notifications"
+          >
+            <Bell size={16} />
           </button>
-
-          {/* Message Icon */}
-          <button className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
-            <MessageCircle size={18} />
+          <button
+            className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+            aria-label="Messages"
+          >
+            <MessageCircle size={16} />
           </button>
+          <Link
+            to="/settings"
+            className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={16} />
+          </Link>
 
-          {/* Settings Icon */}
-          <button className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors">
-            <Settings size={18} />
-          </button>
+          <div className="w-px h-4 bg-[var(--border)] mx-1" />
 
-          {/* Divider */}
-          <div className="w-px h-6 bg-zinc-700"></div>
-
-          {/* User Avatar */}
-          <div className="flex items-center">
-            <UserButton 
-              appearance={{
-                elements: {
-                  avatarBox: "w-8 h-8",
-                  userButtonPopoverCard: "dark"
-                }
-              }}
-            />
-          </div>
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "w-7 h-7",
+              },
+            }}
+          />
         </div>
       </nav>
     </header>

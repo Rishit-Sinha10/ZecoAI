@@ -1,26 +1,16 @@
 import { Send, Sparkles } from "lucide-react";
 import { useState } from "react";
-/**
- * PromptInput Component
- * Text input area for user to type messages/code prompts
- * Has "Ask AI" button to submit
- */
+
 function PromptInput({ onSubmit, isLoading, placeholder = "Ask ZecoAI..." }) {
   const [input, setInput] = useState("");
-  /**
-   * Handle form submission
-   */
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-
     onSubmit(input);
     setInput("");
   };
 
-  /**
-   * Handle Enter key press (Shift+Enter for new line)
-   */
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -28,32 +18,25 @@ function PromptInput({ onSubmit, isLoading, placeholder = "Ask ZecoAI..." }) {
     }
   };
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="border-t border-zinc-700 bg-zinc-900/50 p-4"
-    >
-      <div className="flex gap-3 items-end">
-        {/* Input Area */}
-        <div className="flex-1 flex items-end gap-2">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            disabled={isLoading}
-            rows="3"
-            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-        </div>
+  const t = {
+    bg: "var(--bg-primary)", bg2: "var(--bg-secondary)", bg3: "var(--bg-tertiary)",
+    text: "var(--text-primary)", text2: "var(--text-secondary)", text3: "var(--text-tertiary)",
+    border: "var(--border)", accent: "var(--accent)",
+  };
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={!input.trim() || isLoading}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg transition-colors font-medium h-fit"
-          title="Send message (Ctrl+Enter)"
-        >
+  return (
+    <form onSubmit={handleSubmit} className="p-4" style={{ borderTop: `1px solid ${t.border}`, backgroundColor: t.bg3 }}>
+      <div className="flex gap-3 items-end">
+        <div className="flex-1 flex items-end gap-2">
+          <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown}
+            placeholder={placeholder} disabled={isLoading} rows="3"
+            className="flex-1 rounded-lg px-4 py-3 focus:outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}`, color: t.text }} />
+        </div>
+        <button type="submit" disabled={!input.trim() || isLoading}
+          className="flex items-center gap-2 text-white px-4 py-3 rounded-lg transition-colors font-medium h-fit disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: "var(--accent)" }}
+          title="Send message (Ctrl+Enter)">
           {isLoading ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -67,12 +50,9 @@ function PromptInput({ onSubmit, isLoading, placeholder = "Ask ZecoAI..." }) {
           )}
         </button>
       </div>
-
-      {/* Helper Text */}
-      <p className="text-xs text-white/40 mt-2">
-        Tip: Use Shift+Enter for line breaks, Enter to send
-      </p>
+      <p className="text-xs mt-2" style={{ color: t.text3 }}>Tip: Use Shift+Enter for line breaks, Enter to send</p>
     </form>
   );
 }
+
 export default PromptInput;

@@ -11,8 +11,6 @@ import projectRoutes from "./route/project.route.js";
 import { HandleEdit } from "./controller/edit.controller.js";
 import { HandleCode } from "./controller/code.controller.js";
 import { HandleLanguages } from "./controller/languages.controller.js";
-import { register } from "./controller/register.controller.js";
-import { login } from "./controller/login.controller.js";
 import { Debug } from "./controller/debug.controller.js";
 import { Upload } from "./controller/upload.controller.js";
 export const app = express();
@@ -57,8 +55,6 @@ app.get("/api/debug-auth", (req, res) => {
   });
 });
 // Routes
-app.use("/api/auth/register", register);
-app.use("/api/auth/login", login);
 app.use("/api/ai", aiRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/projects", projectRoutes);

@@ -7,6 +7,7 @@ import FileExplorer from "./FileExplorer";
 import FileTabs from "./FileTabs";
 import CodeEditor from "./CodeEditor";
 import AIChat from "../ai/AIChat";
+import { useToast } from "../../context/ToastContext";
 
 function Editor() {
   const { id: projectId } = useParams();
@@ -18,6 +19,7 @@ function Editor() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [unsavedFiles, setUnsavedFiles] = useState([]);
   const [runTrigger, setRunTrigger] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     try {
@@ -122,7 +124,7 @@ function Editor() {
 
   const handleDeleteFile = (fileId) => {
     if (project.files.length === 1) {
-      alert("Cannot delete the last file");
+      toast.warning("Cannot delete the last file");
       return;
     }
 
@@ -174,12 +176,12 @@ function Editor() {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen flex flex-col bg-zinc-950">
+      <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 size={24} className="animate-spin text-zinc-500" />
-            <span className="text-zinc-500 text-sm font-medium">Loading project...</span>
+            <Loader2 size={24} className="animate-spin" style={{ color: "var(--text-tertiary)" }} />
+            <span className="text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>Loading project...</span>
           </div>
         </div>
       </div>
@@ -188,7 +190,7 @@ function Editor() {
 
   if (error) {
     return (
-      <div className="h-screen w-screen flex flex-col bg-zinc-950">
+      <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -202,10 +204,10 @@ function Editor() {
   const mainFile = project?.files?.find((f) => f.isMain);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-zinc-950">
+    <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Navbar />
 
-      <div className="flex-1 flex overflow-hidden pt-16">
+      <div className="flex-1 flex overflow-hidden pt-14">
         <Sidebar />
 
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -223,11 +225,11 @@ function Editor() {
             <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
               {/* Main file indicator bar */}
               {mainFile && (
-                <div className="h-7 min-h-[28px] shrink-0 border-b border-zinc-800 px-4 flex items-center gap-2 bg-zinc-900/60">
-                  <span className="text-[10px] text-zinc-600 font-medium tracking-wide uppercase">
+                <div className="h-7 min-h-[28px] shrink-0 px-4 flex items-center gap-2" style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--bg-secondary)" }}>
+                  <span className="text-[10px] font-medium tracking-wide uppercase" style={{ color: "var(--text-tertiary)" }}>
                     Main
                   </span>
-                  <span className="text-[11px] text-zinc-400 font-mono">
+                  <span className="text-[11px] font-mono" style={{ color: "var(--text-secondary)" }}>
                     {mainFile.name}
                   </span>
                   <button
@@ -265,7 +267,7 @@ function Editor() {
 
         {/* AI Chat Floating Modal */}
         {isAIChatOpen && (
-          <div className="fixed bottom-6 right-6 w-96 h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col border border-zinc-700/50 overflow-hidden bg-zinc-950">
+          <div className="fixed bottom-6 right-6 w-96 h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden" style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-primary)" }}>
             <AIChat
               activeFile={activeFile}
               isOpen={isAIChatOpen}

@@ -1,5 +1,4 @@
 import { Plus, Trash2, File, Star } from "lucide-react";
-import { useState } from "react";
 
 function FileExplorer({
   project,
@@ -9,9 +8,7 @@ function FileExplorer({
   onDeleteFile,
   onSetMainFile,
 }) {
-  const handleFileClick = (fileId) => {
-    onSelectFile(fileId);
-  };
+  const handleFileClick = (fileId) => onSelectFile(fileId);
 
   const handleDelete = (e, fileId) => {
     e.stopPropagation();
@@ -28,35 +25,48 @@ function FileExplorer({
   const getFileColor = (name) => {
     const ext = name?.split(".").pop()?.toLowerCase();
     const map = {
-      js: "text-yellow-400",
-      jsx: "text-cyan-400",
-      ts: "text-blue-400",
-      tsx: "text-blue-400",
-      py: "text-green-400",
-      java: "text-orange-400",
-      cpp: "text-pink-400",
-      c: "text-blue-300",
-      html: "text-orange-300",
-      css: "text-blue-300",
-      json: "text-yellow-300",
-      md: "text-zinc-400",
+      js: "#facc15",
+      jsx: "#22d3ee",
+      ts: "#60a5fa",
+      tsx: "#60a5fa",
+      py: "#4ade80",
+      java: "#fb923c",
+      cpp: "#f472b6",
+      c: "#93c5fd",
+      html: "#fdba74",
+      css: "#93c5fd",
+      json: "#fde047",
+      md: "#a1a1aa",
     };
-    return map[ext] || "text-zinc-500";
+    return map[ext] || "var(--text-tertiary)";
   };
 
   return (
-    <div className="w-56 bg-zinc-950 border-r border-zinc-800 flex flex-col overflow-hidden shrink-0">
+    <div
+      className="w-52 flex flex-col overflow-hidden shrink-0"
+      style={{ backgroundColor: "var(--bg-primary)", borderRight: "1px solid var(--border)" }}
+    >
       {/* Header */}
-      <div className="border-b border-zinc-800 px-3 py-3">
+      <div className="px-3 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <h3
+            className="text-[11px] font-semibold uppercase tracking-wider"
+            style={{ color: "var(--text-tertiary)" }}
+          >
             Explorer
           </h3>
         </div>
 
         <button
           onClick={onAddFile}
-          className="w-full flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[12px] py-1.5 px-2.5 rounded-md transition-colors font-medium border border-zinc-700/50"
+          className="w-full flex items-center justify-center gap-1.5 text-[12px] py-1.5 px-2.5 rounded-md transition-colors font-medium"
+          style={{
+            backgroundColor: "var(--bg-tertiary)",
+            color: "var(--text-secondary)",
+            border: "1px solid var(--border)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
           aria-label="Create new file"
         >
           <Plus size={14} />
@@ -66,77 +76,97 @@ function FileExplorer({
 
       {/* Project name */}
       <div className="px-3 pt-3 pb-1">
-        <p className="text-[11px] text-zinc-600 font-medium truncate">{project?.name}</p>
+        <p className="text-[11px] font-medium truncate" style={{ color: "var(--text-tertiary)" }}>
+          {project?.name}
+        </p>
       </div>
 
       {/* Files List */}
       <div className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
         {project?.files && project.files.length > 0 ? (
-          project.files.map((file) => (
-            <div
-              key={file.id}
-              onClick={() => handleFileClick(file.id)}
-              className={`
-                group flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer
-                transition-all duration-100 ${
-                  activeFileId === file.id
-                    ? "bg-indigo-500/15"
-                    : "hover:bg-white/[0.04]"
-                }
-              `}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleFileClick(file.id);
-                }
-              }}
-              aria-label={`File: ${file.name}${file.isMain ? " (main)" : ""}`}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                {file.isMain && (
-                  <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
-                )}
-                <File size={14} className={`shrink-0 ${activeFileId === file.id ? "text-indigo-400" : getFileColor(file.name)}`} />
-                <span className={`text-[12px] truncate ${activeFileId === file.id ? "text-zinc-200 font-medium" : "text-zinc-400"}`}>
-                  {file.name}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-0.5 shrink-0">
-                {!file.isMain && (
-                  <button
-                    onClick={(e) => handleSetMain(e, file.id)}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-amber-500/15 text-amber-400/50 hover:text-amber-400 transition-all"
-                    title="Set as main file"
-                    aria-label={`Set ${file.name} as main file`}
+          project.files.map((file) => {
+            const isActive = activeFileId === file.id;
+            return (
+              <div
+                key={file.id}
+                onClick={() => handleFileClick(file.id)}
+                className="group flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer transition-all duration-100"
+                style={{
+                  backgroundColor: isActive ? "var(--accent-light)" : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleFileClick(file.id);
+                  }
+                }}
+                aria-label={`File: ${file.name}${file.isMain ? " (main)" : ""}`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {file.isMain && (
+                    <Star size={10} className="fill-amber-400 shrink-0" style={{ color: "#facc15" }} />
+                  )}
+                  <File
+                    size={14}
+                    className="shrink-0"
+                    style={{ color: isActive ? "var(--accent)" : getFileColor(file.name) }}
+                  />
+                  <span
+                    className="text-[12px] truncate"
+                    style={{
+                      color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
+                      fontWeight: isActive ? 500 : 400,
+                    }}
                   >
-                    <Star size={12} />
+                    {file.name}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {!file.isMain && (
+                    <button
+                      onClick={(e) => handleSetMain(e, file.id)}
+                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all"
+                      style={{ color: "var(--text-tertiary)" }}
+                      title="Set as main file"
+                      aria-label={`Set ${file.name} as main file`}
+                    >
+                      <Star size={12} />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => handleDelete(e, file.id)}
+                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all text-red-400/60 hover:text-red-400"
+                    title="Delete file"
+                    aria-label={`Delete ${file.name}`}
+                  >
+                    <Trash2 size={12} />
                   </button>
-                )}
-                <button
-                  onClick={(e) => handleDelete(e, file.id)}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-500/15 text-red-400/50 hover:text-red-400 transition-all"
-                  title="Delete file"
-                  aria-label={`Delete ${file.name}`}
-                >
-                  <Trash2 size={12} />
-                </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="text-center py-8">
-            <p className="text-zinc-600 text-[12px]">No files yet</p>
-            <p className="text-zinc-700 text-[11px] mt-1">Click "New File" to start</p>
+            <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>No files yet</p>
+            <p className="text-[11px] mt-1" style={{ color: "var(--text-tertiary)" }}>
+              Click "New File" to start
+            </p>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="border-t border-zinc-800 px-3 py-2">
-        <p className="text-[10px] text-zinc-700">
+      <div className="px-3 py-2" style={{ borderTop: "1px solid var(--border)" }}>
+        <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
           {project?.files?.length || 0} file{(project?.files?.length || 0) !== 1 ? "s" : ""}
         </p>
       </div>

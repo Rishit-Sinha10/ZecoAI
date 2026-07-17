@@ -1,4 +1,4 @@
-/* Terminal Component — Premium Output Panel */
+/* Terminal Component — Theme-Aware Output Panel */
 
 .terminal-container {
   display: flex;
@@ -6,22 +6,16 @@
   height: 280px;
   min-height: 120px;
   max-height: 50vh;
-  background: #0c0c0c;
-  border: 1px solid #27272a;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   animation: terminalSlideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes terminalSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Header ── */
@@ -32,8 +26,8 @@
   padding: 0 14px;
   height: 38px;
   min-height: 38px;
-  background: #18181b;
-  border-bottom: 1px solid #27272a;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
   user-select: none;
 }
 
@@ -43,7 +37,7 @@
   gap: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: #e4e4e7;
+  color: var(--text-primary);
   letter-spacing: 0.01em;
 }
 
@@ -71,7 +65,7 @@
 }
 
 .terminal-dot--idle {
-  background: #52525b;
+  background: var(--text-tertiary);
 }
 
 @keyframes terminalPulse {
@@ -91,10 +85,10 @@
   gap: 4px;
   font-size: 11px;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  color: #a1a1aa;
+  color: var(--text-secondary);
   padding: 2px 7px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-tertiary);
   white-space: nowrap;
 }
 
@@ -122,7 +116,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 5px;
-  color: #71717a;
+  color: var(--text-tertiary);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -132,9 +126,9 @@
 }
 
 .terminal-button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #d4d4d8;
+  background: var(--bg-tertiary);
+  border-color: var(--border);
+  color: var(--text-primary);
 }
 
 .terminal-button:active {
@@ -155,8 +149,8 @@
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 12.5px;
   line-height: 1.65;
-  color: #d4d4d8;
-  background: #0c0c0c;
+  color: var(--text-primary);
+  background: var(--bg-primary);
   tab-size: 4;
   -moz-tab-size: 4;
   word-break: break-word;
@@ -171,12 +165,12 @@
 }
 
 .terminal-output::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--border);
   border-radius: 3px;
 }
 
 .terminal-output::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--border-strong);
 }
 
 /* ── Loading State ── */
@@ -188,14 +182,14 @@
   gap: 14px;
   height: 100%;
   min-height: 80px;
-  color: #71717a;
+  color: var(--text-tertiary);
 }
 
 .terminal-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #27272a;
-  border-top-color: #6366f1;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: terminalSpin 0.7s linear infinite;
 }
@@ -244,7 +238,7 @@
 }
 
 .terminal-success {
-  color: #d4d4d8;
+  color: var(--text-primary);
 }
 
 .terminal-error {
@@ -263,7 +257,7 @@
   justify-content: center;
   height: 100%;
   min-height: 80px;
-  color: #3f3f46;
+  color: var(--text-tertiary);
   font-size: 12px;
   font-style: italic;
   gap: 6px;
