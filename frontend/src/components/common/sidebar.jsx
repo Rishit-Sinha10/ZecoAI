@@ -12,7 +12,6 @@ import {
   History,
 } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
-
 const items = [
   { title: "Home", icon: Home },
   { title: "Inbox", icon: Inbox, badge: 4 },
@@ -20,22 +19,20 @@ const items = [
   { title: "Search", icon: Search },
   { title: "Settings", icon: Settings},
 ];
-
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [active, setActive] = useState("Home");
-
   return (
     <aside
       style={{
-        width: collapsed ? "64px" : "240px",
+        width: collapsed ? "64px" : "140px",
         transition: "width 220ms cubic-bezier(0.4,0,0.2,1)",
         fontFamily: "'DM Sans', 'Geist', sans-serif",
       }}
       className="relative flex flex-col h-screen bg-zinc-900 border-r border-zinc-800 overflow-hidden shrink-0"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-4 border-b border-zinc-800 mt-16">
+      <div className="flex items-center justify-between px-1 py-1 border-b border-zinc-800 mt-1">
         {!collapsed && (
           <span
             className="text-white font-semibold text-sm tracking-wide truncate pl-1"
