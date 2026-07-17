@@ -197,8 +197,7 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 
 # External APIs
-JUDGE0_API_KEY=your_judge0_api_key
-JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
+JUDGE0_URL=http://localhost:2358
 
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=mixtral-8x7b-32768

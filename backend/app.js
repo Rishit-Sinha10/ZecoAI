@@ -13,9 +13,7 @@ import { register } from "./controller/register.controller.js";
 import { login } from "./controller/login.controller.js";
 import { Debug } from "./controller/debug.controller.js";
 import { Upload } from "./controller/upload.controller.js";
-
 export const app = express();
-
 // ✅ FIX: CORS MUST be FIRST, before all other middleware
 const corsOptions = {
   origin: ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"],
@@ -24,19 +22,14 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 200,
 };
-
 app.use(cors(corsOptions));
-
 // ✅ Handle preflight OPTIONS requests explicitly
 app.options("*", cors(corsOptions));
-
 // Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 // ✅ Clerk middleware (after CORS)
 app.use(clerkMiddleware());
-
 // 🔍 DEBUG: Log what Clerk middleware extracted
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/chats") || req.path === "/api/debug-auth") {
@@ -51,7 +44,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 // DEBUG: Test Clerk middleware
 app.get("/api/debug-auth", (req, res) => {
   res.json({
@@ -62,7 +54,6 @@ app.get("/api/debug-auth", (req, res) => {
     authHeader: req.headers.authorization ? "Present" : "Missing"
   });
 });
-
 // Routes
 app.use("/api/auth/register", register);
 app.use("/api/auth/login", login);

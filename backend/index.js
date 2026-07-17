@@ -11,12 +11,7 @@ const connectDB = async () => {
       console.warn("⚠️  [DB] MONGODB_URI is not set in .env - Chat features will not work");
       return false;
     }
-
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log("✓ [DB] MongoDB connected successfully");
     return true;
   } catch (error) {
@@ -24,7 +19,6 @@ const connectDB = async () => {
     return false;
   }
 };
-
 /**
  * ✅ ADD: Health check endpoint for debugging
  */
@@ -36,7 +30,6 @@ app.get("/health", (req, res) => {
     uptime: process.uptime(),
   });
 });
-
 /**
  * ✅ ADD: Root endpoint
  */
@@ -47,27 +40,22 @@ app.get("/", (req, res) => {
     timestamp: new Date(),
   });
 });
-
 /**
  * ✅ ADD: Startup sequence
  */
 const PORT = process.env.PORT || 3000;
-
 const startServer = async () => {
   console.log("\n🚀 Starting ZecoAI Backend Server...\n");
-  
   // Connect to MongoDB first
   const dbConnected = await connectDB();
-
   if (!dbConnected) {
     console.warn("⚠️  Continuing without MongoDB. Chat features disabled.\n");
   }
-
   app.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}\n`);
     console.log("Environment Status:");
     console.log(`  ✓ GROQ_API_KEY: ${process.env.GROQ_API_KEY ? "✓ Loaded" : "✗ Missing"}`);
-    console.log(`  ${process.env.RAPID_API_KEY ? "✓" : "✗"} RAPID_API_KEY: ${process.env.RAPID_API_KEY ? "✓ Loaded" : "✗ Missing (Code execution disabled)"}`);
+    console.log(`  ${process.env.JUDGE0_URL ? "✓" : "✗"} JUDGE0_URL: ${process.env.JUDGE0_URL || "http://localhost:2358 (default)"}`);
     console.log(`  ${process.env.MONGODB_URI ? "✓" : "✗"} MONGODB_URI: ${process.env.MONGODB_URI ? "✓ Loaded" : "✗ Missing (Chat disabled)"}`);
     console.log(`  ✓ MongoDB Status: ${mongoose.connection.readyState === 1 ? "✓ Connected" : "✗ Not Connected"}\n`);
     console.log("Available Endpoints:");
@@ -77,5 +65,4 @@ const startServer = async () => {
     console.log("");
   });
 };
-
 startServer();

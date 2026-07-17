@@ -86,10 +86,11 @@ export const executeCode = async (code, language) => {
     console.log(`[EXEC_CODE_SUCCESS] Output length: ${(data.output || "").length}`);
 
     return {
-      success: data.success || (data.output !== undefined && !data.error),
+      success: data.success,
       output: data.output || "",
       error: data.error || "",
       statusCode: data.statusCode || null,
+      statusText: data.statusText || null,
       executionTime: data.executionTime || null,
     };
   } catch (error) {
@@ -107,7 +108,7 @@ export const executeCode = async (code, language) => {
     } else if (error.message.includes("[403]")) {
       userMessage = "Access forbidden. Check API permissions.";
     } else if (error.message.includes("[500]")) {
-      userMessage = "Backend error. Check server configuration (especially RAPID_API_KEY).";
+      userMessage = "Backend error. Check server configuration (JUDGE0_URL).";
     } else if (error.message.includes("[504]")) {
       userMessage = "Code execution timed out. Try with simpler code.";
     }
