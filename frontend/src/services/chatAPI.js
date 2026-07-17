@@ -19,7 +19,7 @@ export const createChatAPI = async (userId, messages, getToken) => {
   const token = await getAuthToken(getToken);
   if (!token) throw new Error("Authentication failed");
 
-  const response = await fetch(`${API_BASE}/chat`, {
+  const response = await fetch(`${API_BASE}/chats`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

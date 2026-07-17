@@ -2,6 +2,8 @@
  * Execute code using self-hosted Judge0
  * Uses async submission + polling to avoid HTTP timeouts on Docker Desktop
  */
+import CodeRun from "../model/code.model.js";
+
 const JUDGE0_URL = process.env.JUDGE0_URL || "http://localhost:2358";
 const POLL_INTERVAL_MS = 500;
 const MAX_POLL_TIME_MS = 60000;
@@ -92,7 +94,7 @@ export const HandleCode = async (req, res) => {
 
     console.log(`[CODE_EXEC_SUCCESS] Status: ${statusId} (${result.status?.description}), elapsed: ${elapsed}ms`);
 
-    res.json({
+    const responseData = {
       success: isSuccess,
       output: result.stdout || "",
       error: errorMsg,
@@ -101,7 +103,26 @@ export const HandleCode = async (req, res) => {
       statusText: result.status?.description || `Status: ${statusId}`,
       executionTime: result.time || null,
       memory: result.memory || null,
-    });
+    };
+
+    try {
+      const languageName = result.language?.name || `lang_${language_id}`;
+      await CodeRun.create({
+        userId: req.auth?.userId || "anonymous",
+        code,
+        language: languageName,
+        stdin,
+        output: result.stdout || "",
+        error: errorMsg,
+        exitCode: result.exit_code || null,
+        executionTime: result.time || null,
+        memory: result.memory || null,
+      });
+    } catch (saveErr) {
+      console.error("[CODE_EXEC_HISTORY_SAVE_ERROR]", saveErr.message);
+    }
+
+    res.json(responseData);
   } catch (err) {
     console.error("[CODE_EXEC_ERROR]", {
       message: err.message,

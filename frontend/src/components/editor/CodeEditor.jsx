@@ -1,32 +1,27 @@
-import { Copy, Save, Play, Brain, Terminal as TerminalIcon, FileCode, ChevronDown, Loader2, Sparkles } from "lucide-react";
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Copy,
+  Save,
+  Play,
+  Brain,
+  FileCode,
+  Loader2,
+  Sparkles,
+  Keyboard,
+  X,
+  RotateCcw,
+} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import Terminal from "./Terminal";
 import CodeGenerator from "./CodeGenerator";
-import { executeCode } from "../../services/codeAPI";
+import { executeCode, fetchLanguages } from "../../services/codeAPI";
 import { getCompletion } from "../../services/aiAPI";
 import "./Terminal.css";
 
-/**
- * CodeEditor Component
- * Main editor area where users write and edit code
- * Features:
- * - Monaco Editor with syntax highlighting
- * - Auto language detection based on file extension
- * - Auto-save to localStorage
- * - Code copy, save, and run functions
- * - Real-time code execution with terminal output
- * - AI chat integration
- */
-
-/**
- * Detect programming language based on file extension
- */
 const detectLanguage = (filename) => {
   if (!filename) return "javascript";
-  
   const ext = filename.split(".").pop()?.toLowerCase();
-  const languageMap = {
+  const map = {
     js: "javascript",
     jsx: "javascript",
     ts: "typescript",
@@ -50,17 +45,19 @@ const detectLanguage = (filename) => {
     xml: "xml",
     yaml: "yaml",
     yml: "yaml",
-    markdown: "markdown",
     md: "markdown",
     sh: "shell",
     bash: "shell",
-    zsh: "shell",
   };
-  
-  return languageMap[ext] || "javascript";
+  return map[ext] || "javascript";
 };
 
-function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
+const formatLangName = (name) => {
+  if (!name) return "";
+  return name.replace(/\s*\(.*\)\s*/, "").trim();
+};
+
+function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger }) {
   const [isSaved, setIsSaved] = useState(true);
   const [editorContent, setEditorContent] = useState("");
   const [language, setLanguage] = useState("javascript");
@@ -70,12 +67,35 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
   const [terminalError, setTerminalError] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionTime, setExecutionTime] = useState(0);
+  const [exitCode, setExitCode] = useState(null);
+  const [memory, setMemory] = useState(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [stdinInput, setStdinInput] = useState("");
+  const [showStdin, setShowStdin] = useState(false);
+  const [languages, setLanguages] = useState([]);
+  const [runCount, setRunCount] = useState(0);
+  const editorRef = useRef(null);
+  const stdinRef = useRef(null);
 
-  /**
-   * Update editor content and detect language when active file changes
-   */
+  useEffect(() => {
+    fetchLanguages().then(setLanguages);
+  }, []);
+
+  useEffect(() => {
+    if (runTrigger > 0 && project?.files) {
+      const mainFile = project.files.find((f) => f.isMain);
+      if (mainFile) {
+        const mainLang = detectLanguage(mainFile.name);
+        setLanguage(mainLang);
+        setEditorContent(mainFile.content);
+        handleExecute(mainFile.content, mainLang);
+      } else {
+        alert("No main file set. Right-click a file in the explorer and set it as main.");
+      }
+    }
+  }, [runTrigger]);
+
   useEffect(() => {
     if (activeFile) {
       setEditorContent(activeFile.content);
@@ -85,50 +105,39 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
     }
   }, [activeFile]);
 
-  /**
-   * Handle content change and propagate to parent
-   */
   const handleContentChange = (newContent) => {
     if (newContent !== undefined) {
       setEditorContent(newContent);
       setIsSaved(false);
       onContentChange(newContent);
-      setIsSaved(true); // Mark as saved since we auto-save
+      setIsSaved(true);
     }
   };
 
-  /**
-   * Handle code insertion from generator
-   */
-  const handleInsertGeneratedCode = (code, newFilename) => {
+  const handleInsertGeneratedCode = (code) => {
     setEditorContent(code);
     onContentChange(code);
     setIsSaved(false);
   };
 
-  /**
-   * Handle Monaco editor mount - setup event listeners and completion provider
-   */
   const handleEditorMount = (editor, monaco) => {
-    // Track text selection
+    editorRef.current = editor;
+
     editor.onDidChangeCursorSelection((e) => {
       const selection = editor.getModel().getValueInRange(e.selection);
       setSelectedCode(selection || "");
     });
 
-    // Register AI completion provider
     monaco.languages.registerCompletionItemProvider(language, {
       triggerCharacters: [".", "(", "{", "[", " ", "\n"],
       provideCompletionItems: async (model, position) => {
         setIsCompleting(true);
-        
         const textUntilPosition = model.getValueInRange({
           startLineNumber: 1,
           startColumn: 1,
           endLineNumber: position.lineNumber,
           endColumn: position.column,
         });
-
         const textAfterPosition = model.getValueInRange({
           startLineNumber: position.lineNumber,
           startColumn: position.column,
@@ -137,13 +146,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
         });
 
         try {
-          const result = await getCompletion(
-            model.getValue(),
-            language,
-            textUntilPosition,
-            textAfterPosition
-          );
-
+          const result = await getCompletion(model.getValue(), language, textUntilPosition, textAfterPosition);
           if (result.success && result.completion) {
             return {
               suggestions: [
@@ -151,8 +154,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
                   label: "ai-completion",
                   kind: monaco.languages.CompletionItemKind.Snippet,
                   insertText: result.completion,
-                  insertTextRules:
-                    monaco.languages.CompletionItemInsertTextRule.None,
+                  insertTextRules: monaco.languages.CompletionItemInsertTextRule.None,
                   detail: "AI Suggestion",
                   documentation: "Generated by ZecoAI",
                   range: {
@@ -165,50 +167,21 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
               ],
             };
           }
-        } catch (error) {
-          console.error("AI completion failed:", error);
+        } catch (err) {
+          console.error("AI completion failed:", err);
         } finally {
           setIsCompleting(false);
         }
-
         return { suggestions: [] };
       },
     });
   };
 
-  /**
-   * Send selected code or full file to AI chat
-   */
-  const handleAskAI = () => {
-    const codeToSend = selectedCode || editorContent;
-    if (!codeToSend.trim()) {
-      alert("No code selected. Using entire file.");
-      setSelectedCode("");
-    }
-    // Call the parent's onOpenAI callback - AI component will use activeFile.content
-    onOpenAI?.();
-  };
-  /**
-   * Copy code to clipboard
-   */
-  const handleCopy = () => {
-    navigator.clipboard.writeText(editorContent);
-    alert("Code copied to clipboard!");
-  };
+  const handleExecute = async (code, lang) => {
+    const codeToRun = code || editorContent;
+    const langToUse = lang || language;
 
-  /** 
-   * Save code (auto-save is already happening, this is for explicit save feedback)
-   */
-  const handleSave = () => {
-    setIsSaved(true);
-    alert("Project saved successfully!");
-  };
-
-  /**
-   * Run the code and display output in terminal
-   */
-  const handleRun = async () => {
-    if (!editorContent.trim()) {
+    if (!codeToRun.trim()) {
       alert("No code to execute");
       return;
     }
@@ -218,126 +191,186 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
     setTerminalOutput("");
     setTerminalError("");
     setExecutionTime(0);
+    setExitCode(null);
+    setMemory(null);
 
     const startTime = Date.now();
-    
+
     try {
-      const result = await executeCode(editorContent, language);
-      const endTime = Date.now();
-      
-      setExecutionTime(endTime - startTime);
+      const result = await executeCode(codeToRun, langToUse, stdinInput);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+      setExecutionTime(elapsed);
+      setExitCode(result.exitCode);
+      setMemory(result.memory);
+      setRunCount((c) => c + 1);
 
       if (result.success) {
         setTerminalOutput(result.output || "Code executed successfully with no output");
         setTerminalError("");
       } else {
-        const errorDetail = result.error || result.statusText || "Execution failed";
-        setTerminalError(errorDetail);
-        setTerminalOutput("");
+        setTerminalError(result.error || "Execution failed");
+        setTerminalOutput(result.output || "");
       }
-    } catch (error) {
-      setTerminalError(error.message || "Unknown error occurred");
+    } catch (err) {
+      setTerminalError(err.message || "Unknown error occurred");
       setTerminalOutput("");
     } finally {
       setIsExecuting(false);
     }
   };
 
-  /**
-   * Close terminal
-   */
-  const handleCloseTerminal = () => {
-    setShowTerminal(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(editorContent);
+  };
+
+  const handleSave = () => {
+    setIsSaved(true);
+  };
+
+  const handleClearStdin = () => {
+    setStdinInput("");
+    stdinRef.current?.focus();
   };
 
   if (!activeFile) {
     return (
       <div className="flex-1 flex items-center justify-center bg-zinc-950">
         <div className="text-center">
-          <FileCode size={64} className="text-white/30 mx-auto mb-4" />
-          <p className="text-white/50">No file selected</p>
+          <FileCode size={48} className="text-white/20 mx-auto mb-3" />
+          <p className="text-white/40 text-sm font-medium">No file selected</p>
+          <p className="text-white/25 text-xs mt-1">Choose a file from the explorer</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-zinc-950">
-      {/* Editor Header */}
-      <div className="h-16 border-b border-zinc-700 px-6 py-3 flex items-center justify-between bg-zinc-900">
-        <div className="flex items-center gap-3">
-          <FileCode size={18} className="text-blue-400" />
-          <div>
-            <h2 className="text-sm font-semibold text-white">{activeFile.name}</h2>
-            <p className="text-xs text-white/50">{project?.name}</p>
-          </div>
-          {!isSaved && (
-            <span className="ml-2 w-2 h-2 bg-yellow-400 rounded-full"></span>
-          )}
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      {/* ── Toolbar ── */}
+      <div className="h-11 min-h-[44px] shrink-0 border-b border-zinc-800 px-4 flex items-center justify-between gap-3 bg-zinc-950">
+        {/* Left: File info */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <FileCode size={15} className="text-zinc-500 shrink-0" />
+          <span className="text-[13px] font-semibold text-zinc-200 truncate">{activeFile.name}</span>
+          {!isSaved && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
+          <span className="text-[11px] text-zinc-600 hidden sm:inline">/ {project?.name}</span>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1">
           {isCompleting && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600/20 text-purple-400 border border-purple-600/30 text-xs font-medium">
-              <Loader2 size={14} className="animate-spin" />
-              AI Completing...
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 text-[11px] font-medium mr-1">
+              <Loader2 size={12} className="animate-spin" />
+              <span className="hidden md:inline">AI...</span>
             </div>
           )}
+
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="px-2 py-1 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-medium cursor-pointer focus:outline-none focus:border-zinc-500 transition-colors h-7"
+            aria-label="Select language"
+          >
+            {languages.map((lang) => (
+              <option key={lang.id} value={lang.name}>
+                {formatLangName(lang.name)}
+              </option>
+            ))}
+          </select>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-zinc-800 mx-1" />
+
+          {/* Stdin Toggle */}
+          <button
+            onClick={() => setShowStdin(!showStdin)}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all text-[11px] font-medium h-7 ${
+              showStdin
+                ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/25"
+                : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 border border-transparent"
+            }`}
+            title="Toggle stdin input"
+            aria-label="Toggle stdin"
+            aria-pressed={showStdin}
+          >
+            <Keyboard size={13} />
+            <span className="hidden md:inline">Input</span>
+          </button>
+
+          {/* Copy */}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-600 text-white/70 hover:text-white hover:border-zinc-500 transition-colors text-xs font-medium"
+            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-all text-[11px] font-medium h-7 border border-transparent"
             title="Copy code"
+            aria-label="Copy code"
           >
-            <Copy size={16} />
-            Copy
+            <Copy size={13} />
           </button>
+
+          {/* Save */}
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors text-xs font-medium"
-            title="Save file"
+            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-all text-[11px] font-medium h-7 border border-transparent"
+            title="Save"
+            aria-label="Save file"
           >
-            <Save size={16} />
-            Save
+            <Save size={13} />
           </button>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-zinc-800 mx-1" />
+
+          {/* Run — Primary action */}
           <button
-            onClick={handleRun}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/30 transition-colors text-xs font-medium"
-            title="Run project"
+            onClick={() => handleExecute()}
+            disabled={isExecuting}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-all text-[11px] font-semibold h-7"
+            title="Run code (Ctrl+Enter)"
+            aria-label="Run code"
           >
-            <Play size={16} />
+            {isExecuting ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Play size={12} fill="currentColor" />
+            )}
             Run
           </button>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-zinc-800 mx-1" />
+
+          {/* AI Generate */}
           <button
             onClick={() => setShowGenerator(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-600/30 transition-colors text-xs font-medium"
-            title="Generate code with AI"
+            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-purple-400/70 hover:text-purple-400 hover:bg-purple-500/10 transition-all text-[11px] font-medium h-7 border border-transparent"
+            title="AI Code Generator"
+            aria-label="AI Code Generator"
           >
-            <Sparkles size={16} />
-            Generate
+            <Sparkles size={13} />
+            <span className="hidden lg:inline">Generate</span>
           </button>
+
+          {/* Ask AI */}
           <button
-            onClick={handleAskAI}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-black transition-colors text-xs font-bold shadow-lg"
+            onClick={() => onOpenAI?.()}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-amber-400/70 hover:text-amber-400 hover:bg-amber-500/10 transition-all text-[11px] font-medium h-7 border border-transparent"
             title="Ask AI for help"
+            aria-label="Ask AI"
           >
-            <Brain size={16} />
-            Ask AI
-            {selectedCode && <span className="text-xs">({selectedCode.length} chars)</span>}
+            <Brain size={13} />
+            <span className="hidden lg:inline">Ask AI</span>
+            {selectedCode && (
+              <span className="text-[9px] text-zinc-600 hidden xl:inline">({selectedCode.length})</span>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Editor Container */}
-      <div className="flex-1 flex flex-col gap-4 p-4 overflow-hidden">
-        {/* Code Editor */}
-        <div className="flex-1 flex flex-col bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
-          {/* Editor Label */}
-          <div className="bg-zinc-800 px-4 py-2 border-b border-zinc-700">
-            <p className="text-xs text-white/50">Code Editor</p>
-          </div>
-
-          {/* Monaco Editor */}
+      {/* ── Main Content: Editor + Panels ── */}
+      <div className="flex-1 flex flex-col min-h-0 p-3 gap-2">
+        {/* Editor */}
+        <div className="flex-1 min-h-0 flex flex-col bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
           <Editor
             height="100%"
             language={language}
@@ -345,22 +378,34 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
             onChange={handleContentChange}
             onMount={handleEditorMount}
             theme="vs-dark"
+            loading={
+              <div className="flex-1 flex items-center justify-center bg-zinc-900">
+                <Loader2 size={24} className="animate-spin text-zinc-600" />
+              </div>
+            }
             options={{
-              minimap: { enabled: true },
+              minimap: { enabled: true, maxColumn: 80, renderCharacters: false },
               wordWrap: "on",
               formatOnPaste: true,
               formatOnType: true,
               tabSize: 2,
               fontSize: 14,
-              fontFamily: "'Monaco', 'Menlo', 'Consolas', 'monospace'",
+              lineHeight: 22,
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+              fontLigatures: true,
               automaticLayout: true,
               smoothScrolling: true,
-              padding: { top: 16, bottom: 16 },
+              cursorBlinking: "smooth",
+              cursorSmoothCaretAnimation: "on",
+              cursorStyle: "line",
+              padding: { top: 12, bottom: 12 },
+              renderLineHighlight: "all",
+              renderLineHighlightOnlyWhenFocus: false,
+              currentLineHighlight: "gutter",
               selectionHighlight: true,
-              occurrencesHighlight: "on",
-              readOnly: false,
-              suggestOnTriggerCharacters: true,
-              acceptSuggestionOnCommitCharacter: true,
+              occurrencesHighlight: "singleFile",
+              bracketPairColorization: { enabled: true },
+              guides: { bracketPairs: true, indentation: true },
               suggest: {
                 showMethods: true,
                 showFunctions: true,
@@ -388,29 +433,84 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
                 showTypeParameters: true,
                 showSnippets: true,
               },
-              quickSuggestions: {
-                other: true,
-                comments: false,
-                strings: false,
-              },
+              quickSuggestions: { other: true, comments: false, strings: false },
               parameterHints: { enabled: true },
               suggestSelection: "first",
               tabCompletion: "on",
               wordBasedSuggestions: "off",
+              mouseWheelZoom: true,
+              scrollbar: {
+                verticalScrollbarSize: 8,
+                horizontalScrollbarSize: 8,
+                verticalSliderSize: 8,
+              },
+              overviewRulerLanes: 0,
+              hideCursorInOverviewRuler: true,
+              renderWhitespace: "selection",
             }}
           />
         </div>
 
-      {/* Terminal/Output */}
-      {showTerminal && (
-        <Terminal
-          output={terminalOutput}
-          error={terminalError}
-          isLoading={isExecuting}
-          onClose={handleCloseTerminal}
-          executionTime={executionTime}
-        />
-      )}
+        {/* Stdin Panel */}
+        {showStdin && (
+          <div className="shrink-0 bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-800/60 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Keyboard size={12} className="text-zinc-500" />
+                <span className="text-[11px] font-medium text-zinc-400">Standard Input</span>
+                {stdinInput.length > 0 && (
+                  <span className="text-[10px] text-zinc-600 font-mono">{stdinInput.length} chars</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                {stdinInput.length > 0 && (
+                  <button
+                    onClick={handleClearStdin}
+                    className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700/50 transition-colors"
+                    title="Clear input"
+                    aria-label="Clear input"
+                  >
+                    <RotateCcw size={12} />
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowStdin(false)}
+                  className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700/50 transition-colors"
+                  title="Close stdin"
+                  aria-label="Close stdin panel"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+            <textarea
+              ref={stdinRef}
+              value={stdinInput}
+              onChange={(e) => setStdinInput(e.target.value)}
+              placeholder="Enter input for your program..."
+              className="w-full bg-zinc-900 text-emerald-400/90 font-mono text-[13px] leading-relaxed p-3 resize-none focus:outline-none border-none placeholder:text-zinc-700"
+              rows={4}
+              spellCheck={false}
+              aria-label="Standard input"
+            />
+          </div>
+        )}
+
+        {/* Terminal Output */}
+        {showTerminal && (
+          <div className="shrink-0">
+            <Terminal
+              output={terminalOutput}
+              error={terminalError}
+              isLoading={isExecuting}
+              onClose={() => setShowTerminal(false)}
+              executionTime={executionTime}
+              exitCode={exitCode}
+              memory={memory}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Code Generator Modal */}
       <CodeGenerator
@@ -419,9 +519,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI }) {
         onInsertCode={handleInsertGeneratedCode}
       />
     </div>
-    </div>
-  )
-};
-
+  );
+}
 
 export default CodeEditor;

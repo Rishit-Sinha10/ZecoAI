@@ -1,33 +1,15 @@
 import mongoose from "mongoose";
 
-const codeSchema = new mongoose.Schema({
-  userId: {
-    type: String,
-    required:true,   // Clerk userId or your auth userId
-    required: true,
-    index: true
-  },
-
-  code: {
-    type: String,
-    required: true
-  },
-
-  language: {
-    type: String,   // js, python, cpp
-    required: true
-  },
-
-  output: {
-    type: String,
-    default: ""
-  },
-
-  error: {
-    type: String,
-    default: ""
-  }
-
+const codeRunSchema = new mongoose.Schema({
+  userId: { type: String, required: true, index: true },
+  code: { type: String, required: true },
+  language: { type: String, required: true },
+  stdin: { type: String, default: "" },
+  output: { type: String, default: "" },
+  error: { type: String, default: "" },
+  exitCode: { type: Number, default: null },
+  executionTime: { type: String, default: null },
+  memory: { type: Number, default: null },
 }, { timestamps: true });
 
-export default mongoose.model("CodeRun", codeSchema);
+export default mongoose.model("CodeRun", codeRunSchema);

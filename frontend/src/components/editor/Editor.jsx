@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Play, Loader2 } from "lucide-react";
 import Navbar from "../common/navbar";
 import Sidebar from "../common/sidebar";
 import FileExplorer from "./FileExplorer";
@@ -7,23 +8,6 @@ import FileTabs from "./FileTabs";
 import CodeEditor from "./CodeEditor";
 import AIChat from "../ai/AIChat";
 
-/**
- * Main Editor Component
- * 
- * Manages:
- * - Project and file state from localStorage
- * - Active file selection
- * - File creation, deletion, and content updates
- * - Auto-save to localStorage
- * - AI chat panel visibility
- * - Unsaved file tracking
- * 
- * Features:
- * - File tabs for quick switching
- * - Auto-save on content change
- * - Language detection for syntax highlighting
- * - AI chat integration
- */
 function Editor() {
   const { id: projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -33,15 +17,14 @@ function Editor() {
   const [error, setError] = useState(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [unsavedFiles, setUnsavedFiles] = useState([]);
+  const [runTrigger, setRunTrigger] = useState(0);
 
-  /**
-   * Load project from localStorage on component mount
-   * Also set the first file as active by default
-   */
   useEffect(() => {
     try {
       const projects = JSON.parse(localStorage.getItem("projects")) || [];
-      const foundProject = projects.find(p => p.id === projectId || p.id === Number(projectId));
+      const foundProject = projects.find(
+        (p) => p.id === projectId || p.id === Number(projectId)
+      );
 
       if (!foundProject) {
         setError("Project not found");
@@ -49,27 +32,29 @@ function Editor() {
         return;
       }
 
-      // Initialize files if they don't exist
       if (!foundProject.files || foundProject.files.length === 0) {
         foundProject.files = [
           {
             id: Date.now(),
             name: "index.js",
-            content: `// ${foundProject.name}\n// Welcome to ZecoAI Editor\n\nfunction main() {\n  console.log('Hello from ${foundProject.name}');\n}\n\nmain();`,
+            content: `// ${foundProject.name}\n\nfunction main() {\n  console.log('Hello from ${foundProject.name}');\n}\n\nmain();`,
+            isMain: true,
           },
         ];
-        // Save the initialized project
-        const projectIndex = projects.findIndex(p => p.id === projectId || p.id === Number(projectId));
-        projects[projectIndex] = foundProject;
+        const idx = projects.findIndex(
+          (p) => p.id === projectId || p.id === Number(projectId)
+        );
+        projects[idx] = foundProject;
         localStorage.setItem("projects", JSON.stringify(projects));
       }
 
       setProject(foundProject);
-      
-      // Set first file as active by default
+
       if (foundProject.files && foundProject.files.length > 0) {
-        setActiveFileId(foundProject.files[0].id);
-        setActiveFile(foundProject.files[0]);
+        const mainFile = foundProject.files.find((f) => f.isMain);
+        const firstFile = mainFile || foundProject.files[0];
+        setActiveFileId(firstFile.id);
+        setActiveFile(firstFile);
       }
 
       setLoading(false);
@@ -79,12 +64,9 @@ function Editor() {
     }
   }, [projectId]);
 
-  /**
-   * Handle file selection from FileExplorer
-   */
   const handleSelectFile = (fileId) => {
     if (project && project.files) {
-      const file = project.files.find(f => f.id === fileId);
+      const file = project.files.find((f) => f.id === fileId);
       if (file) {
         setActiveFileId(fileId);
         setActiveFile(file);
@@ -92,73 +74,52 @@ function Editor() {
     }
   };
 
-  /**
-   * Update active file content and persist to localStorage
-   */
   const handleFileContentChange = (newContent) => {
     if (activeFile) {
-      // Update active file state
       const updatedFile = { ...activeFile, content: newContent };
       setActiveFile(updatedFile);
 
-      // Track unsaved file
       if (!unsavedFiles.includes(activeFileId)) {
-        setUnsavedFiles(prev => [...prev, activeFileId]);
+        setUnsavedFiles((prev) => [...prev, activeFileId]);
       }
 
-      // Update project files
       const updatedProject = {
         ...project,
-        files: project.files.map(f => f.id === activeFile.id ? updatedFile : f),
+        files: project.files.map((f) =>
+          f.id === activeFile.id ? updatedFile : f
+        ),
       };
       setProject(updatedProject);
 
-      // Save to localStorage
       const projects = JSON.parse(localStorage.getItem("projects")) || [];
-      const projectIndex = projects.findIndex(p => p.id === project.id);
-      if (projectIndex !== -1) {
-        projects[projectIndex] = updatedProject;
+      const idx = projects.findIndex((p) => p.id === project.id);
+      if (idx !== -1) {
+        projects[idx] = updatedProject;
         localStorage.setItem("projects", JSON.stringify(projects));
-        // Mark as saved after localStorage update
-        setUnsavedFiles(prev => prev.filter(id => id !== activeFileId));
+        setUnsavedFiles((prev) => prev.filter((id) => id !== activeFileId));
       }
     }
   };
 
-  /**
-   * Add new file to the project
-   */
   const handleAddFile = () => {
     const fileName = prompt("Enter file name (e.g., utils.js):");
     if (!fileName) return;
 
-    const newFile = {
-      id: Date.now(),
-      name: fileName,
-      content: `// ${fileName}\n`,
-    };
-
-    const updatedProject = {
-      ...project,
-      files: [...project.files, newFile],
-    };
+    const newFile = { id: Date.now(), name: fileName, content: `// ${fileName}\n` };
+    const updatedProject = { ...project, files: [...project.files, newFile] };
 
     setProject(updatedProject);
     setActiveFileId(newFile.id);
     setActiveFile(newFile);
 
-    // Save to localStorage
     const projects = JSON.parse(localStorage.getItem("projects")) || [];
-    const projectIndex = projects.findIndex(p => p.id === project.id);
-    if (projectIndex !== -1) {
-      projects[projectIndex] = updatedProject;
+    const idx = projects.findIndex((p) => p.id === project.id);
+    if (idx !== -1) {
+      projects[idx] = updatedProject;
       localStorage.setItem("projects", JSON.stringify(projects));
     }
   };
 
-  /**
-   * Delete file from the project
-   */
   const handleDeleteFile = (fileId) => {
     if (project.files.length === 1) {
       alert("Cannot delete the last file");
@@ -167,70 +128,78 @@ function Editor() {
 
     const updatedProject = {
       ...project,
-      files: project.files.filter(f => f.id !== fileId),
+      files: project.files.filter((f) => f.id !== fileId),
     };
-
     setProject(updatedProject);
 
-    // Set next file as active if current file is deleted
     if (activeFileId === fileId) {
       setActiveFileId(updatedProject.files[0].id);
       setActiveFile(updatedProject.files[0]);
     }
 
-    // Save to localStorage
     const projects = JSON.parse(localStorage.getItem("projects")) || [];
-    const projectIndex = projects.findIndex(p => p.id === project.id);
-    if (projectIndex !== -1) {
-      projects[projectIndex] = updatedProject;
+    const idx = projects.findIndex((p) => p.id === project.id);
+    if (idx !== -1) {
+      projects[idx] = updatedProject;
       localStorage.setItem("projects", JSON.stringify(projects));
     }
   };
 
-  /**
-   * Close file from tab without deleting it
-   * Just removes it from view, doesn't delete the file
-   */
-  const handleCloseFileTab = (fileId) => {
-    if (project.files.length === 1) {
-      alert("Cannot close the last file");
-      return;
-    }
+  const handleSetMainFile = (fileId) => {
+    const updatedProject = {
+      ...project,
+      files: project.files.map((f) => ({ ...f, isMain: f.id === fileId })),
+    };
+    setProject(updatedProject);
 
-    // If closing the active file, switch to next file
+    const projects = JSON.parse(localStorage.getItem("projects")) || [];
+    const idx = projects.findIndex((p) => p.id === project.id);
+    if (idx !== -1) {
+      projects[idx] = updatedProject;
+      localStorage.setItem("projects", JSON.stringify(projects));
+    }
+  };
+
+  const handleRunMain = () => setRunTrigger((prev) => prev + 1);
+
+  const handleCloseFileTab = (fileId) => {
+    if (project.files.length === 1) return;
     if (activeFileId === fileId) {
-      const nextFile = project.files.find(f => f.id !== fileId);
+      const nextFile = project.files.find((f) => f.id !== fileId);
       setActiveFileId(nextFile.id);
       setActiveFile(nextFile);
     }
-
-    // Remove from unsaved files list
-    setUnsavedFiles(prev => prev.filter(id => id !== fileId));
+    setUnsavedFiles((prev) => prev.filter((id) => id !== fileId));
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="h-screen w-screen flex flex-col bg-zinc-950">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-white text-lg">Loading project...</div>
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 size={24} className="animate-spin text-zinc-500" />
+            <span className="text-zinc-500 text-sm font-medium">Loading project...</span>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="h-screen w-screen flex flex-col bg-zinc-950">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-red-400 text-lg">{error}</div>
+          <div className="text-center">
+            <p className="text-red-400 text-sm font-medium">{error}</p>
+          </div>
         </div>
       </div>
     );
   }
+
+  const mainFile = project?.files?.find((f) => f.isMain);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-950">
@@ -239,21 +208,40 @@ function Editor() {
       <div className="flex-1 flex overflow-hidden pt-16">
         <Sidebar />
 
-        {/* File Explorer and Editor Container */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* File Explorer Sidebar */}
-          <FileExplorer
-            project={project}
-            activeFileId={activeFileId}
-            onSelectFile={handleSelectFile}
-            onAddFile={handleAddFile}
-            onDeleteFile={handleDeleteFile}
-          />
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {/* File Explorer + Editor */}
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            <FileExplorer
+              project={project}
+              activeFileId={activeFileId}
+              onSelectFile={handleSelectFile}
+              onAddFile={handleAddFile}
+              onDeleteFile={handleDeleteFile}
+              onSetMainFile={handleSetMainFile}
+            />
 
-          {/* Main Editor Area with AI Chat */}
-          <div className="flex-1 flex flex-row overflow-hidden">
-            {/* Code Editor - Full Width */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+              {/* Main file indicator bar */}
+              {mainFile && (
+                <div className="h-7 min-h-[28px] shrink-0 border-b border-zinc-800 px-4 flex items-center gap-2 bg-zinc-900/60">
+                  <span className="text-[10px] text-zinc-600 font-medium tracking-wide uppercase">
+                    Main
+                  </span>
+                  <span className="text-[11px] text-zinc-400 font-mono">
+                    {mainFile.name}
+                  </span>
+                  <button
+                    onClick={handleRunMain}
+                    className="ml-auto flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-emerald-500/80 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                    title="Run main file"
+                    aria-label="Run main file"
+                  >
+                    <Play size={9} fill="currentColor" />
+                    Run
+                  </button>
+                </div>
+              )}
+
               {/* File Tabs */}
               <FileTabs
                 files={project?.files || []}
@@ -263,27 +251,28 @@ function Editor() {
                 unsavedFiles={unsavedFiles}
               />
 
-              {/* Code Editor */}
+              {/* Code Editor — flex-1 fills remaining space */}
               <CodeEditor
                 activeFile={activeFile}
                 project={project}
                 onContentChange={handleFileContentChange}
                 onOpenAI={() => setIsAIChatOpen(true)}
+                runTrigger={runTrigger}
               />
             </div>
           </div>
-
-          {/* AI Chat Widget (Floating Modal) */}
-          {isAIChatOpen && (
-            <div className="fixed bottom-6 right-6 w-96 h-96 rounded-lg shadow-2xl z-50 flex flex-col border border-zinc-700 overflow-hidden">
-              <AIChat
-                activeFile={activeFile}
-                isOpen={isAIChatOpen}
-                onClose={() => setIsAIChatOpen(false)}
-              />
-            </div>
-          )}
         </div>
+
+        {/* AI Chat Floating Modal */}
+        {isAIChatOpen && (
+          <div className="fixed bottom-6 right-6 w-96 h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col border border-zinc-700/50 overflow-hidden bg-zinc-950">
+            <AIChat
+              activeFile={activeFile}
+              isOpen={isAIChatOpen}
+              onClose={() => setIsAIChatOpen(false)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

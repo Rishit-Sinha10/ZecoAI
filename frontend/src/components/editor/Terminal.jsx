@@ -1,15 +1,19 @@
-import { X, Copy, Download } from "lucide-react";
-import { useState } from "react";
+import { X, Copy, Download, Trash2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
-/**
- * Terminal Component
- * Displays code execution output and errors
- */
-function Terminal({ output, error, isLoading, onClose, executionTime }) {
+function Terminal({ output, error, isLoading, onClose, executionTime, exitCode, memory }) {
   const [copied, setCopied] = useState(false);
+  const outputRef = useRef(null);
+
+  useEffect(() => {
+    if (outputRef.current) {
+      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    }
+  }, [output, error, isLoading]);
 
   const handleCopyOutput = () => {
     const text = output || error || "";
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -17,65 +21,110 @@ function Terminal({ output, error, isLoading, onClose, executionTime }) {
 
   const handleDownloadOutput = () => {
     const text = output || error || "";
-    const element = document.createElement("a");
-    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
-    element.setAttribute("download", "output.txt");
-    element.style.display = "none";
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    if (!text) return;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "output.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const formatMemory = (bytes) => {
+    if (!bytes) return null;
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const memStr = formatMemory(memory);
+
+  const getStatusDot = () => {
+    if (isLoading) return "terminal-dot--running";
+    if (exitCode !== null && exitCode !== undefined && exitCode !== 0) return "terminal-dot--error";
+    if (exitCode === 0) return "terminal-dot--success";
+    return "terminal-dot--idle";
   };
 
   return (
-    <div className="terminal-container">
+    <div className="terminal-container" role="region" aria-label="Terminal output">
+      {/* Header */}
       <div className="terminal-header">
         <div className="terminal-title">
-          <span className="text-white font-semibold">Terminal</span>
-          {executionTime && (
-            <span className="text-white/50 text-xs ml-2">({executionTime.toFixed(2)}ms)</span>
-          )}
+          <span className={`terminal-dot ${getStatusDot()}`} />
+          <span>Terminal</span>
+
+          <div className="terminal-stats">
+            {executionTime > 0 && (
+              <span className="terminal-stat">{executionTime}s</span>
+            )}
+            {exitCode !== null && exitCode !== undefined && (
+              <span className={`terminal-stat ${exitCode === 0 ? "terminal-stat--exit-ok" : "terminal-stat--exit-err"}`}>
+                exit {exitCode}
+              </span>
+            )}
+            {memStr && (
+              <span className="terminal-stat">{memStr}</span>
+            )}
+          </div>
         </div>
+
         <div className="terminal-actions">
           <button
             onClick={handleCopyOutput}
             className="terminal-button"
             title="Copy output"
+            aria-label="Copy output"
           >
-            <Copy size={16} />
+            <Copy size={13} />
             {copied ? "Copied" : "Copy"}
           </button>
           <button
             onClick={handleDownloadOutput}
             className="terminal-button"
             title="Download output"
+            aria-label="Download output"
           >
-            <Download size={16} />
+            <Download size={13} />
           </button>
-          <button onClick={onClose} className="terminal-button" title="Close terminal">
-            <X size={16} />
+          <button
+            onClick={onClose}
+            className="terminal-button terminal-button--danger"
+            title="Close terminal"
+            aria-label="Close terminal"
+          >
+            <X size={13} />
           </button>
         </div>
       </div>
 
-      <div className="terminal-output">
+      {/* Output */}
+      <div className="terminal-output" ref={outputRef}>
         {isLoading && (
           <div className="terminal-loading">
-            <div className="spinner"></div>
+            <div className="terminal-spinner" />
             <span>Executing code...</span>
           </div>
         )}
 
         {!isLoading && error && (
-          <div className="terminal-error">
-            <span className="error-label">Error:</span>
-            <pre>{error}</pre>
+          <div className="terminal-block">
+            <span className="terminal-block-label terminal-block-label--error">Error</span>
+            <div className="terminal-error">
+              <pre>{error}</pre>
+            </div>
           </div>
         )}
 
         {!isLoading && !error && output && (
-          <div className="terminal-success">
-            <span className="output-label">Output:</span>
-            <pre>{output}</pre>
+          <div className="terminal-block">
+            <span className="terminal-block-label terminal-block-label--output">Output</span>
+            <div className="terminal-success">
+              <pre>{output}</pre>
+            </div>
           </div>
         )}
 

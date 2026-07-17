@@ -1,35 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileCode } from "lucide-react";
+import { Plus, FileCode, Download, Upload } from "lucide-react";
 import Navbar from "../common/navbar";
 import Sidebar from "../common/sidebar";
 import ProjectCard from "../common/projectcard";
 
-/**
- * Projects Component
- * Main page for browsing, creating, and opening projects
- * Each project contains a file system managed in the Editor component
- */
 function Projects() {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [showNewProjectModal, setShowNewProjectModal] = useState(false);
     const [projectName, setProjectName] = useState("");
+    const fileInputRef = useRef(null);
 
-    /**
-     * Load projects from localStorage on component mount
-     */
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem("projects")) || [];
         setProjects(saved);
     }, []);
 
-    /**
-     * Create a new project with initial file structure
-     */
     const createProject = () => {
         if (!projectName.trim()) return;
-        
+
         const newProject = {
             id: Date.now().toString(),
             name: projectName,
@@ -38,13 +28,14 @@ function Projects() {
                     id: Date.now(),
                     name: "index.js",
                     content: `// ${projectName}\n// Welcome to ZecoAI\n\nfunction main() {\n  console.log('Hello from ${projectName}');\n}\n\nmain();`,
+                    isMain: true,
                 },
             ],
             language: "JavaScript",
             lastModified: new Date().toISOString(),
             createdAt: new Date().toISOString(),
         };
-        
+
         const updated = [...projects, newProject];
         setProjects(updated);
         localStorage.setItem("projects", JSON.stringify(updated));
@@ -52,9 +43,6 @@ function Projects() {
         setShowNewProjectModal(false);
     };
 
-    /**
-     * Delete a project from the list
-     */
     const handleDelete = (projectId) => {
         if (window.confirm("Are you sure you want to delete this project?")) {
             const updated = projects.filter(p => p.id !== projectId);
@@ -63,51 +51,91 @@ function Projects() {
         }
     };
 
-    /**
-     * Open project in the editor
-     * Navigate to /editor/:id route where the file system is managed
-     */
     const handleOpen = (project) => {
         navigate(`/editor/${project.id}`);
     };
 
-    /**
-     * Edit project name
-     */
     const handleEdit = (project) => {
         const editedName = prompt("Edit project name:", project.name);
         if (editedName && editedName.trim()) {
-            const updated = projects.map(p => 
-                p.id === project.id 
-                    ? { ...p, name: editedName, lastModified: new Date().toISOString() } 
+            const updated = projects.map(p =>
+                p.id === project.id
+                    ? { ...p, name: editedName, lastModified: new Date().toISOString() }
                     : p
             );
             setProjects(updated);
             localStorage.setItem("projects", JSON.stringify(updated));
-            setProjects(updated);
         }
     };
 
-    /**
-     * Share project (placeholder for future implementation)
-     */
     const handleShare = (project) => {
         alert(`Share functionality for "${project.name}" coming soon!`);
     };
 
+    const handleExport = () => {
+        const data = {
+            projects,
+            exportedAt: new Date().toISOString(),
+            source: "ZecoAI",
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `zecoai-projects-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                const importedProjects = data.projects || data;
+
+                if (!Array.isArray(importedProjects)) {
+                    alert("Invalid file format");
+                    return;
+                }
+
+                const migrated = importedProjects.map((p) => ({
+                    ...p,
+                    id: p.id || Date.now().toString(),
+                    files: (p.files || []).map((f) => ({
+                        ...f,
+                        id: f.id || Date.now(),
+                        isMain: f.isMain || false,
+                    })),
+                    lastModified: p.lastModified || new Date().toISOString(),
+                    createdAt: p.createdAt || new Date().toISOString(),
+                }));
+
+                const updated = [...projects, ...migrated];
+                setProjects(updated);
+                localStorage.setItem("projects", JSON.stringify(updated));
+                alert(`Imported ${migrated.length} project(s)`);
+            } catch {
+                alert("Failed to parse import file");
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+    };
+
     return (
         <div className="h-screen w-screen flex flex-col bg-zinc-950">
-            {/* Navbar */}
             <Navbar />
-            
-            {/* Main Content Area */}
+
             <div className="flex-1 flex overflow-hidden pt-16">
-                {/* Sidebar */}
                 <Sidebar />
-                
-                {/* Projects Container */}
+
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    {/* Header */}
                     <div className="border-b border-zinc-800 px-8 py-6 bg-zinc-900/50">
                         <div className="flex items-center justify-between">
                             <div>
@@ -116,20 +144,44 @@ function Projects() {
                                     {projects.length} project{projects.length !== 1 ? 's' : ''}
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setShowNewProjectModal(true)}
-                                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-                            >
-                                <Plus size={20} />
-                                New Project
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleExport}
+                                    disabled={projects.length === 0}
+                                    className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-white/70 px-4 py-2 rounded-lg transition-colors text-sm font-medium border border-zinc-700"
+                                    title="Export all projects as JSON"
+                                >
+                                    <Download size={16} />
+                                    Export
+                                </button>
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white/70 px-4 py-2 rounded-lg transition-colors text-sm font-medium border border-zinc-700"
+                                    title="Import projects from JSON"
+                                >
+                                    <Upload size={16} />
+                                    Import
+                                </button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".json"
+                                    onChange={handleImport}
+                                    className="hidden"
+                                />
+                                <button
+                                    onClick={() => setShowNewProjectModal(true)}
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                                >
+                                    <Plus size={20} />
+                                    New Project
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Projects Grid */}
                     <div className="flex-1 overflow-y-auto p-8">
                         {projects.length === 0 ? (
-                            // Empty State
                             <div className="flex flex-col items-center justify-center h-full text-center">
                                 <div className="text-white/30 mb-4">
                                     <FileCode size={64} />
@@ -138,7 +190,7 @@ function Projects() {
                                     No projects yet
                                 </h2>
                                 <p className="text-white/50 mb-6 max-w-md">
-                                    Get started by creating your first project. Build amazing applications with ZecoAI!
+                                    Get started by creating your first project or importing an existing one.
                                 </p>
                                 <div className="flex gap-3">
                                     <button
@@ -157,12 +209,14 @@ function Projects() {
                                                     {
                                                         id: Date.now(),
                                                         name: "index.js",
-                                                        content: `// Sample Project\n// This is a test project\n\nfunction greet(name) {\n  return "Hello, " + name + "!";\n}\n\nconsole.log(greet("ZecoAI"));\n`,
+                                                        content: `// Sample Project\n\nfunction greet(name) {\n  return "Hello, " + name + "!";\n}\n\nconsole.log(greet("ZecoAI"));\n`,
+                                                        isMain: true,
                                                     },
                                                     {
                                                         id: Date.now() + 1,
                                                         name: "utils.js",
-                                                        content: `// Utility functions\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport function subtract(a, b) {\n  return a - b;\n}\n`,
+                                                        content: `// Utility functions\n\nexport function add(a, b) {\n  return a + b;\n}\n`,
+                                                        isMain: false,
                                                     }
                                                 ],
                                                 language: "JavaScript",
@@ -180,7 +234,6 @@ function Projects() {
                                 </div>
                             </div>
                         ) : (
-                            // Projects Grid
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {projects.map(project => (
                                     <ProjectCard
@@ -198,13 +251,11 @@ function Projects() {
                 </div>
             </div>
 
-            {/* Create New Project Modal */}
             {showNewProjectModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
                     <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-6 w-96 shadow-2xl">
                         <h2 className="text-2xl font-bold text-white mb-4">Create New Project</h2>
-                        
-                        {/* Input Field */}
+
                         <input
                             type="text"
                             placeholder="Project name (e.g., My Awesome App)"
@@ -215,7 +266,6 @@ function Projects() {
                             autoFocus
                         />
 
-                        {/* Buttons */}
                         <div className="flex gap-2">
                             <button
                                 onClick={() => {
