@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, MessageSquare, Brain, Loader2, ChevronRight } from "lucide-react";
 import Navbar from "../common/navbar";
-import Sidebar from "../common/sidebar";
 import MessageBubble from "../ai/MessageBubble";
 import PromptInput from "../ai/PromptInput";
 import useAuth from "../../hooks/useAuth";
@@ -18,8 +17,6 @@ function ChatWindow() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingChats, setLoadingChats] = useState(true);
   const messagesEndRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
   useEffect(() => {
     if (isSignedIn) fetchChats();
     else {
@@ -203,7 +200,6 @@ function ChatWindow() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-1 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="flex-1 flex overflow-hidden">
           {/* Chat list sidebar */}
           <div className="w-64 flex flex-col shrink-0" style={{ borderRight: `1px solid ${t.border}`, backgroundColor: t.bg2 }}>

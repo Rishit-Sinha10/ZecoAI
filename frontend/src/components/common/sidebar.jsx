@@ -7,22 +7,21 @@ import {
   PanelLeftClose,
   PanelLeft,
   Terminal,
+  LayoutTemplate,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { UserButton } from "@clerk/clerk-react";
-
+import { UserAvatar, UserButton } from "@clerk/clerk-react";
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { title: "Projects", icon: FolderCode, to: "/projects" },
+  { title: "Templates", icon: LayoutTemplate, to: "/templates" },
   { title: "Chat", icon: MessageSquare, to: "/chat" },
   { title: "Runs", icon: Terminal, to: "/runs" },
   { title: "Settings", icon: Settings, to: "/settings" },
 ];
-
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-
   return (
     <aside
       style={{
@@ -94,20 +93,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      {/* Footer */}
-      <div
-        className="px-2 py-3"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <UserButton
-          appearance={{
-            elements: {
-              avatarBox: "w-8 h-8",
-            },
-          }}
-        />
-      </div>
     </aside>
   );
 }

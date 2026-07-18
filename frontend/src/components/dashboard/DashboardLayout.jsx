@@ -13,17 +13,19 @@ import {
   BarChart3,
 } from "lucide-react";
 import Navbar from "../common/navbar";
-import Sidebar from "../common/sidebar";
+import { ProjectCardSkeleton } from "../ui/Skeleton";
 import useAuth from "../../hooks/useAuth";
 import { getUserProjectsAPI } from "../../services/projectAPI";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { isSignedIn, getToken } = useAuth();
 
   useEffect(() => {
     const loadProjects = async () => {
+      setLoading(true);
       if (isSignedIn) {
         try {
           const data = await getUserProjectsAPI(getToken);
@@ -34,6 +36,7 @@ export default function Dashboard() {
       } else {
         setProjects(JSON.parse(localStorage.getItem("projects")) || []);
       }
+      setLoading(false);
     };
     loadProjects();
   }, [isSignedIn, getToken]);
@@ -80,43 +83,58 @@ export default function Dashboard() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-1 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-5xl mx-auto px-8 py-10 space-y-8">
             {/* Header */}
             <div>
               <h1 className="text-3xl font-bold" style={{ color: t.text }}>
-                Welcome back
+                Welcome back 
               </h1>
               <p className="mt-1 text-sm" style={{ color: t.text3 }}>
                 Here's an overview of your workspace.
               </p>
             </div>
-
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { label: "Projects", value: projects.length, icon: FolderCode, color: "var(--accent)" },
-                { label: "Files", value: totalFiles, icon: FileCode, color: "#10b981" },
-                { label: "Languages", value: Object.keys(langCounts).length, icon: BarChart3, color: "#8b5cf6" },
-              ].map(({ label, value, icon: Icon, color }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-4 rounded-xl p-5 transition-colors"
-                  style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}
-                >
-                  <div
-                    className="flex items-center justify-center w-10 h-10 rounded-lg"
-                    style={{ backgroundColor: `${color}18`, color }}
-                  >
-                    <Icon size={20} />
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="rounded-xl p-5" style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                      <div className="space-y-2">
+                        <div className="h-7 w-12 rounded" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                        <div className="h-3 w-16 rounded" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold" style={{ color: t.text }}>{value}</p>
-                    <p className="text-xs" style={{ color: t.text3 }}>{label}</p>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <>
+                  <style>{`@keyframes skeleton-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }`}</style>
+                  {[
+                    { label: "Projects", value: projects.length, icon: FolderCode, color: "var(--accent)" },
+                    { label: "Files", value: totalFiles, icon: FileCode, color: "#10b981" },
+                    { label: "Languages", value: Object.keys(langCounts).length, icon: BarChart3, color: "#8b5cf6" },
+                  ].map(({ label, value, icon: Icon, color }) => (
+                    <div
+                      key={label}
+                      className="flex items-center gap-4 rounded-xl p-5 transition-colors"
+                      style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}
+                    >
+                      <div
+                        className="flex items-center justify-center w-10 h-10 rounded-lg"
+                        style={{ backgroundColor: `${color}18`, color }}
+                      >
+                        <Icon size={20} />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold" style={{ color: t.text }}>{value}</p>
+                        <p className="text-xs" style={{ color: t.text3 }}>{label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
 
             {/* Quick Actions */}
@@ -161,7 +179,20 @@ export default function Dashboard() {
                     </button>
                   )}
                 </div>
-                {recentProjects.length === 0 ? (
+                {loading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-4 rounded-xl p-4" style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}>
+                        <div className="w-10 h-10 rounded-lg shrink-0" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-1/3 rounded" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                          <div className="h-3 w-1/4 rounded" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                        </div>
+                        <div className="h-3 w-12 rounded" style={{ backgroundColor: t.bg3, animation: "skeleton-pulse 1.5s ease-in-out infinite" }} />
+                      </div>
+                    ))}
+                  </div>
+                ) : recentProjects.length === 0 ? (
                   <div
                     className="rounded-xl p-8 text-center"
                     style={{ backgroundColor: t.bg2, border: `1px solid ${t.border}` }}

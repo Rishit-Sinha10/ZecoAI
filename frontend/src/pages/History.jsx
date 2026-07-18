@@ -3,7 +3,6 @@ import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { Trash2, Plus, MessageSquare } from "lucide-react";
 import Navbar from "../components/common/navbar";
-import Sidebar from "../components/common/sidebar";
 import { useToast } from "../context/ToastContext";
 import "./History.css";
 
@@ -86,7 +85,6 @@ function History() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-4 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="history-container">
           <div className="history-header">
             <h1>Chat History</h1>

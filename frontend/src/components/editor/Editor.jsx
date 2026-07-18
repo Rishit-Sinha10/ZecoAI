@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Play, Loader2 } from "lucide-react";
 import Navbar from "../common/navbar";
-import Sidebar from "../common/sidebar";
 import FileExplorer from "./FileExplorer";
 import FileTabs from "./FileTabs";
 import CodeEditor from "./CodeEditor";
@@ -278,8 +277,6 @@ function Editor() {
       <Navbar />
 
       <div className="flex-1 flex overflow-hidden pt-14">
-        <Sidebar />
-
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <div className="flex-1 flex overflow-hidden min-h-0">
             <FileExplorer

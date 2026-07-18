@@ -1,17 +1,19 @@
-import {
-  Code2,
-  Bell,
-  Settings,
-  MessageCircle,
-  ArrowLeft,
-} from "lucide-react";
+import { Code2, Settings, LogOut, ArrowLeft } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "../ui/ThemeToggle";
-
+import useAuth from "../../hooks/useAuth";
+import favicon from "../../../public/favicon.svg";
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isEditor = location.pathname.startsWith("/editor/");
+  const { isSignedIn, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <header
@@ -34,8 +36,11 @@ export default function Navbar() {
             </Link>
           )}
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-md" style={{ backgroundColor: "var(--accent-light)" }}>
-              <Code2 size={18} style={{ color: "var(--accent)" }} />
+            <div
+              className="p-1.5 rounded-md"
+              style={{ backgroundColor: "var(--accent-light)" }}
+            >
+              <img src={favicon} alt="ZecoAI" width={18} height={18} />
             </div>
             <span
               className="font-semibold text-sm tracking-tight"
@@ -52,7 +57,7 @@ export default function Navbar() {
             { label: "Dashboard", to: "/dashboard" },
             { label: "Projects", to: "/projects" },
             { label: "Chat", to: "/chat" },
-            { label: "History", to: "/history" },
+            { label: "Templates", to: "/templates" },
           ].map((item) => {
             const isActive = location.pathname === item.to;
             return (
@@ -73,22 +78,7 @@ export default function Navbar() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1">
-          <ThemeToggle />
-
           <div className="w-px h-4 bg-[var(--border)] mx-1" />
-
-          <button
-            className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell size={16} />
-          </button>
-          <button
-            className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
-            aria-label="Messages"
-          >
-            <MessageCircle size={16} />
-          </button>
           <Link
             to="/settings"
             className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
@@ -96,9 +86,17 @@ export default function Navbar() {
           >
             <Settings size={16} />
           </Link>
-
+          {isSignedIn && (
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogOut size={16} />
+            </button>
+          )}
           <div className="w-px h-4 bg-[var(--border)] mx-1" />
-
           <UserButton
             appearance={{
               elements: {

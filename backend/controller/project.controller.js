@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import Project from "../model/project.model.js";
 
 export const createProject = async (req, res) => {
@@ -158,5 +159,61 @@ export const importProjects = async (req, res) => {
   } catch (err) {
     console.error("[PROJECT_IMPORT_ERROR]", err.message, err.stack);
     res.status(500).json({ error: "Failed to import projects" });
+  }
+};
+
+export const shareProject = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const project = await Project.findOne({ _id: req.params.id, userId });
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (!project.shareId) {
+      project.shareId = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+      await project.save();
+    }
+
+    res.json({ shareId: project.shareId });
+  } catch (err) {
+    console.error("[PROJECT_SHARE_ERROR]", err.message);
+    res.status(500).json({ error: "Failed to share project" });
+  }
+};
+
+export const unshareProject = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const project = await Project.findOne({ _id: req.params.id, userId });
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    project.shareId = null;
+    await project.save();
+
+    res.json({ message: "Share link revoked" });
+  } catch (err) {
+    console.error("[PROJECT_UNSHARE_ERROR]", err.message);
+    res.status(500).json({ error: "Failed to revoke share" });
+  }
+};
+
+export const getSharedProject = async (req, res) => {
+  try {
+    const { shareId } = req.params;
+    const project = await Project.findOne({ shareId }).select("name description files shareId createdAt updatedAt");
+
+    if (!project) {
+      return res.status(404).json({ error: "Shared project not found" });
+    }
+
+    res.json(project);
+  } catch (err) {
+    console.error("[SHARED_PROJECT_ERROR]", err.message);
+    res.status(500).json({ error: "Failed to fetch shared project" });
   }
 };

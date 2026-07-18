@@ -1,9 +1,9 @@
 {
-  "name": "y",
+  "name": "zecoai-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "ZecoAI backend - AI-powered code editor API",
   "license": "ISC",
-  "author": "",
+  "author": "ZecoAI",
   "type": "module",
   "main": "index.js",
   "scripts": {

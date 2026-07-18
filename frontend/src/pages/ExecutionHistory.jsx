@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, Trash2, Play, Terminal, ChevronRight, Code2, Filter } from "lucide-react";
 import Navbar from "../components/common/navbar";
-import Sidebar from "../components/common/sidebar";
 import { useToast } from "../context/ToastContext";
 import useAuth from "../hooks/useAuth";
 import { getUserRunsAPI, deleteRunAPI } from "../services/codeHistoryAPI";
@@ -70,7 +69,6 @@ function ExecutionHistory() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-1 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="px-8 py-6" style={{ borderBottom: `1px solid ${t.border}`, backgroundColor: t.bg3 }}>
             <div className="flex items-center justify-between">

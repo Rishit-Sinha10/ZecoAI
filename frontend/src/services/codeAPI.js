@@ -20,7 +20,6 @@ export const fetchLanguages = async () => {
     cachedLanguages = data.languages || [];
     return cachedLanguages;
   } catch (error) {
-    console.error("[FETCH_LANGUAGES_ERROR]", error);
     return [];
   }
 };
@@ -66,8 +65,6 @@ export const executeCode = async (code, language, stdin = "") => {
       };
     }
 
-    console.log(`[EXEC_CODE] Language: ${language}, ID: ${languageId}, Code length: ${code.length}`);
-
     const response = await fetch(`${API_BASE}/run-code`, {
       method: "POST",
       headers: {
@@ -89,15 +86,12 @@ export const executeCode = async (code, language, stdin = "") => {
       } catch (e) {
       }
 
-      console.error(`[EXEC_CODE_ERROR] ${errorMessage}`);
-
       throw new Error(`[${response.status}] ${errorMessage}`);
     }
 
     const data = await response.json();
 
     if (!data.success && data.error) {
-      console.warn(`[EXEC_CODE] Execution failed: ${data.error}`);
       return {
         success: false,
         output: "",
@@ -108,8 +102,6 @@ export const executeCode = async (code, language, stdin = "") => {
       };
     }
 
-    console.log(`[EXEC_CODE_SUCCESS] Output length: ${(data.output || "").length}`);
-
     return {
       success: data.success,
       output: data.output || "",
@@ -119,8 +111,6 @@ export const executeCode = async (code, language, stdin = "") => {
       memory: data.memory || null,
     };
   } catch (error) {
-    console.error("[EXEC_CODE_ERROR]", error);
-
     let userMessage = error.message;
 
     if (error.message.includes("Failed to fetch")) {

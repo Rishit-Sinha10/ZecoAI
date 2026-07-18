@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, FileCode, Download, Upload } from "lucide-react";
 import Navbar from "../common/navbar";
-import Sidebar from "../common/sidebar";
 import ProjectCard from "../common/projectcard";
 import { useToast } from "../../context/ToastContext";
 import useAuth from "../../hooks/useAuth";
@@ -164,7 +163,13 @@ function Projects() {
     toast.success("Project renamed locally");
   };
 
-  const handleShare = (project) => toast.info(`Share functionality for "${project.name}" coming soon!`);
+  const handleShare = (updatedProject) => {
+    if (updatedProject) {
+      setProjects((prev) =>
+        prev.map((p) => (p._id === updatedProject._id ? updatedProject : p))
+      );
+    }
+  };
 
   const handleExport = () => {
     const data = { projects, exportedAt: new Date().toISOString(), source: "ZecoAI" };
@@ -210,7 +215,6 @@ function Projects() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-1 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="px-8 py-6" style={{ borderBottom: `1px solid ${t.border}`, backgroundColor: t.bg3 }}>
             <div className="flex items-center justify-between">

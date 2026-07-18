@@ -3,7 +3,6 @@ import { useAuth } from "@clerk/clerk-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, ArrowLeft } from "lucide-react";
 import Navbar from "../components/common/navbar";
-import Sidebar from "../components/common/sidebar";
 import { useToast } from "../context/ToastContext";
 import "./ChatDetail.css";
 
@@ -103,7 +102,6 @@ function ChatDetail() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-1 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="flex-1 flex flex-col" style={{ backgroundColor: t.bg }}>
           <div className="chat-header">
             <button className="back-btn" onClick={() => navigate("/history")} title="Back to history"><ArrowLeft size={20} /></button>

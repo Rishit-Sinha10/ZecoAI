@@ -5,6 +5,7 @@ import {
   SignInButton,
   UserButton,
 } from "@clerk/clerk-react";
+import favicon from "../../../public/favicon.svg"
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import {
@@ -104,12 +105,7 @@ export default function AboutUs() {
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "var(--accent)" }}
-            >
-              <Brain size={16} className="text-white" />
-            </div>
+              <img src={favicon} alt="ZecoAI" width={18} height={18} />
             <span
               className="font-bold text-base tracking-tight"
               style={{ color: t.text }}
@@ -747,14 +743,14 @@ export default function AboutUs() {
           </p>
           <div className="flex gap-4">
             <a
-              href="#"
+              href="/privacy"
               className="text-xs transition-colors"
               style={{ color: t.text3 }}
             >
               Privacy
             </a>
             <a
-              href="#"
+              href="/terms"
               className="text-xs transition-colors"
               style={{ color: t.text3 }}
             >

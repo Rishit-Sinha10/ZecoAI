@@ -8,6 +8,8 @@ import {
   deleteProject,
   exportProject,
   importProjects,
+  shareProject,
+  unshareProject,
 } from "../controller/project.controller.js";
 
 const router = express.Router();
@@ -21,5 +23,7 @@ router.post("/import", importProjects);
 router.get("/:id", getProjectById);
 router.put("/:id", updateProject);
 router.delete("/:id", deleteProject);
+router.post("/:id/share", shareProject);
+router.delete("/:id/share", unshareProject);
 
 export default router;

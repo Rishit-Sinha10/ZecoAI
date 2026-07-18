@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
-import { Settings as SettingsIcon, Monitor, Sun, Moon, Keyboard, User, Palette, Type } from "lucide-react";
+import { useAuth as useClerkAuth } from "@clerk/clerk-react";
+import { Settings as SettingsIcon, Keyboard, User, Palette, Type, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../common/navbar";
-import Sidebar from "../common/sidebar";
 import ThemeToggle from "../ui/ThemeToggle";
 import ColorPicker from "../ui/ColorPicker";
 import useTheme from "../../hooks/useTheme";
+import useAuth from "../../hooks/useAuth";
 
 const DEFAULT_PREFS = {
   fontSize: 14,
@@ -30,7 +31,9 @@ const SHORTCUTS = [
 ];
 
 function Settings() {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, userId } = useClerkAuth();
+  const { logout, isSignedIn } = useAuth();
+  const navigate = useNavigate();
   const { mode } = useTheme();
   const [prefs, setPrefs] = useState(() => {
     try {
@@ -54,7 +57,6 @@ function Settings() {
     <div className="h-screen w-screen flex flex-col" style={{ backgroundColor: t.bg }}>
       <Navbar />
       <div className="flex-1 flex overflow-hidden pt-16">
-        <Sidebar />
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-8 py-10 space-y-10">
             {/* Header */}
@@ -140,6 +142,21 @@ function Settings() {
                   <div className="flex items-center justify-between py-2">
                     <span className="text-sm" style={{ color: t.text2 }}>User ID</span>
                     <span className="text-xs font-mono" style={{ color: t.text3 }}>{userId}</span>
+                  </div>
+                )}
+                {isSignedIn && (
+                  <div className="pt-2" style={{ borderTop: `1px solid ${t.border}` }}>
+                    <button
+                      onClick={async () => {
+                        await logout();
+                        navigate("/");
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium text-[13px]"
+                      style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.2)" }}
+                    >
+                      <LogOut size={15} />
+                      Log out
+                    </button>
                   </div>
                 )}
               </div>

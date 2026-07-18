@@ -11,6 +11,7 @@ const projectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, default: "" },
   files: [fileSchema],
+  shareId: { type: String, default: null, unique: true, sparse: true },
 }, { timestamps: true });
 
 export default mongoose.model("Project", projectSchema);
