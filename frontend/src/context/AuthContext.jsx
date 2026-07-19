@@ -19,29 +19,34 @@ export function AuthProvider({ children }) {
   // Sync Clerk user to local state
   useEffect(() => {
     try {
-      // Check if Clerk has finished loading
-      if (clerkUser && typeof clerkUser.isLoaded !== 'undefined') {
-        setLoading(false)
+      if (!clerkUser || typeof clerkUser.isLoaded === 'undefined') {
+        return
+      }
 
-        if (clerkUser?.isSignedIn && clerkUser.user) {
-          const clerkUserObj = clerkUser.user
-          const localUser = {
-            id: clerkUserObj.id,
-            email:
-              clerkUserObj.primaryEmailAddress?.emailAddress ||
-              (clerkUserObj.emailAddresses && clerkUserObj.emailAddresses[0]?.emailAddress) ||
-              clerkUserObj.email,
-            firstName: clerkUserObj.firstName || '',
-            lastName: clerkUserObj.lastName || '',
-            fullName: `${clerkUserObj.firstName || ''} ${clerkUserObj.lastName || ''}`.trim() || clerkUserObj.username || clerkUserObj.id,
-            image: clerkUserObj.imageUrl,
-          }
-          setUser(localUser)
-          localStorage.setItem('auth_user', JSON.stringify(localUser))
-        } else {
-          setUser(null)
-          localStorage.removeItem('auth_user')
+      setLoading(!clerkUser.isLoaded)
+
+      if (!clerkUser.isLoaded) {
+        return
+      }
+
+      if (clerkUser?.isSignedIn && clerkUser.user) {
+        const clerkUserObj = clerkUser.user
+        const localUser = {
+          id: clerkUserObj.id,
+          email:
+            clerkUserObj.primaryEmailAddress?.emailAddress ||
+            (clerkUserObj.emailAddresses && clerkUserObj.emailAddresses[0]?.emailAddress) ||
+            clerkUserObj.email,
+          firstName: clerkUserObj.firstName || '',
+          lastName: clerkUserObj.lastName || '',
+          fullName: `${clerkUserObj.firstName || ''} ${clerkUserObj.lastName || ''}`.trim() || clerkUserObj.username || clerkUserObj.id,
+          image: clerkUserObj.imageUrl,
         }
+        setUser(localUser)
+        localStorage.setItem('auth_user', JSON.stringify(localUser))
+      } else {
+        setUser(null)
+        localStorage.removeItem('auth_user')
       }
     } catch (err) {
       console.error('Auth sync error:', err)
@@ -81,6 +86,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     error,
+    isLoaded: clerkUser?.isLoaded ?? false,
     isSignedIn: clerkUser?.isSignedIn || false,
     getToken,
     logout,

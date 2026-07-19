@@ -2,9 +2,10 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 export default function AuthGuard({ children }) {
-  const { isSignedIn, loading } = useAuth();
+  const { isSignedIn, loading, isLoaded } = useAuth();
   const location = useLocation();
-  if (loading) {
+
+  if (loading || !isLoaded) {
     return (
       <div className="h-screen w-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg-primary)" }}>
         <div className="flex flex-col items-center gap-3">
@@ -14,8 +15,10 @@ export default function AuthGuard({ children }) {
       </div>
     );
   }
+
   if (!isSignedIn) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
   return children;
 }
