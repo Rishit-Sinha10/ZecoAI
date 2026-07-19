@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef} from "react";
-import { useMotionValue, useSpring, useTransform } from "framer-motion";
+import {motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   Sparkles,
   Zap,
