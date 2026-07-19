@@ -1,4 +1,7 @@
+import mongoose from "mongoose";
 import Chat from "../model/chat.model.js";
+
+const isDbConnected = () => mongoose.connection.readyState === 1;
 
 /**
  * Extract first message as title
@@ -20,6 +23,9 @@ const generateTitle = (text) => {
  */
 export const createChat = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ success: false, message: "Database not connected. Please try again later." });
+    }
     // ✅ userId comes from verified Clerk token, not from request body
     const userId = req.auth.userId;
     const { messages, title: customTitle } = req.body;
@@ -76,6 +82,9 @@ export const createChat = async (req, res) => {
  */
 export const getUserChats = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ success: false, message: "Database not connected. Please try again later." });
+    }
     // ✅ userId comes from Clerk token verified by requireAuth() middleware
     const userId = req.auth.userId;
 
@@ -117,6 +126,9 @@ export const getUserChats = async (req, res) => {
  */
 export const getChatById = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ success: false, message: "Database not connected. Please try again later." });
+    }
     const { id } = req.params;
     // ✅ userId from verified Clerk token
     const userId = req.auth.userId;
@@ -163,6 +175,9 @@ export const getChatById = async (req, res) => {
  */
 export const addMessageToChat = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ success: false, message: "Database not connected. Please try again later." });
+    }
     const { id } = req.params;
     const { role, content } = req.body;
     // ✅ userId from verified Clerk token
@@ -229,6 +244,9 @@ export const addMessageToChat = async (req, res) => {
  */
 export const deleteChat = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ success: false, message: "Database not connected. Please try again later." });
+    }
     const { id } = req.params;
     // ✅ userId from verified Clerk token
     const userId = req.auth.userId;

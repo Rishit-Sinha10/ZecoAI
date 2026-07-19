@@ -43,3 +43,8 @@ app.use("/api/run-code", HandleCode);
 app.get("/api/languages", HandleLanguages);
 app.use("/api/upload", Upload);
 app.get("/api/share/:shareId", getSharedProject);
+
+app.use((err, req, res, next) => {
+  console.error("[UNHANDLED_ERROR]", err.message);
+  res.status(500).json({ error: "Internal server error" });
+});

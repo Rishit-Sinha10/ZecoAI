@@ -15,7 +15,7 @@ export default function AuthGuard({ children }) {
     );
   }
   if (!isSignedIn) {
-    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return children;
 }

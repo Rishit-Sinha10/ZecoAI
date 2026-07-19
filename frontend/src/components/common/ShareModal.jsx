@@ -6,40 +6,69 @@ export default function ShareModal({ project, isOpen, onClose, getToken, isSigne
   const [shareId, setShareId] = useState(project?.shareId || null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     setShareId(project?.shareId || null);
     setCopied(false);
+    setError(null);
   }, [project]);
 
   if (!isOpen) return null;
 
-  const baseUrl = window.location.origin;
+  const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
   const shareUrl = shareId ? `${baseUrl}/share/${shareId}` : null;
 
   const handleShare = async () => {
-    if (!isSignedIn || !getToken) return;
+    const projectId = project?._id || project?.id;
+
+    if (!isSignedIn || !getToken) {
+      setError("Sign in to generate a share link.");
+      return;
+    }
+
+    if (!projectId) {
+      setError("This project is missing a valid ID. Please reopen it from the project list.");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
     try {
-      const result = await shareProjectAPI(project._id, getToken);
-      setShareId(result.shareId);
-      onUpdate?.({ ...project, shareId: result.shareId });
+      const result = await shareProjectAPI(projectId, getToken);
+      const nextShareId = result?.shareId || project?.shareId;
+      setShareId(nextShareId);
+      onUpdate?.({ ...project, shareId: nextShareId });
     } catch (err) {
       console.error("Share failed:", err);
+      setError(err?.message || "Failed to generate share link.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRevoke = async () => {
-    if (!isSignedIn || !getToken) return;
+    const projectId = project?._id || project?.id;
+
+    if (!isSignedIn || !getToken) {
+      setError("Sign in to manage share links.");
+      return;
+    }
+
+    if (!projectId) {
+      setError("This project is missing a valid ID. Please reopen it from the project list.");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
     try {
-      await unshareProjectAPI(project._id, getToken);
+      await unshareProjectAPI(projectId, getToken);
       setShareId(null);
       onUpdate?.({ ...project, shareId: null });
     } catch (err) {
       console.error("Revoke failed:", err);
+      setError(err?.message || "Failed to revoke share link.");
     } finally {
       setLoading(false);
     }
@@ -88,6 +117,9 @@ export default function ShareModal({ project, isOpen, onClose, getToken, isSigne
               {copied && (
                 <p className="text-[11px] mt-1.5 font-medium" style={{ color: "#10b981" }}>Copied to clipboard!</p>
               )}
+              {error && (
+                <p className="text-[11px] mt-1.5 font-medium" style={{ color: "#ef4444" }}>{error}</p>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -119,6 +151,9 @@ export default function ShareModal({ project, isOpen, onClose, getToken, isSigne
             <p className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
               Generate a public link so anyone can view this project in read-only mode.
             </p>
+            {error && (
+              <p className="text-[11px] font-medium" style={{ color: "#ef4444" }}>{error}</p>
+            )}
             <button
               onClick={handleShare}
               disabled={loading || !isSignedIn}

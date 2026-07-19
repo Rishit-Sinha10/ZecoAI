@@ -6,6 +6,7 @@ function FileExplorer({
   activeFileId,
   onSelectFile,
   onAddFile,
+  onAddFolder,
   onDeleteFile,
   onSetMainFile,
   onRenameFile,
@@ -260,21 +261,38 @@ function FileExplorer({
             Explorer
           </h3>
         </div>
-        <button
-          onClick={onAddFile}
-          className="w-full flex items-center justify-center gap-1.5 text-[12px] py-1.5 px-2.5 rounded-md transition-colors font-medium"
-          style={{
-            backgroundColor: "var(--bg-tertiary)",
-            color: "var(--text-secondary)",
-            border: "1px solid var(--border)",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-          aria-label="Create new file"
-        >
-          <Plus size={14} />
-          New File
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onAddFile}
+            className="flex-1 flex items-center justify-center gap-1.5 text-[12px] py-1.5 px-2.5 rounded-md transition-colors font-medium"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            aria-label="Create new file"
+          >
+            <Plus size={16} />
+            File
+          </button>
+          <button
+            onClick={onAddFolder}
+            className="flex-1 flex items-center justify-center gap-1.5 text-[12px] py-1.5 px-2.5 rounded-md transition-colors font-medium"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            aria-label="Create new folder"
+          >
+            <Folder size={16} />
+            Folder
+          </button>
+        </div>
       </div>
 
       <div className="px-3 pt-3 pb-1">

@@ -1,7 +1,13 @@
+import mongoose from "mongoose";
 import CodeRun from "../model/code.model.js";
+
+const isDbConnected = () => mongoose.connection.readyState === 1;
 
 export const getUserCodeRuns = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ error: "Database not connected. Please try again later." });
+    }
     const userId = req.auth?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -21,6 +27,9 @@ export const getUserCodeRuns = async (req, res) => {
 
 export const deleteCodeRun = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(503).json({ error: "Database not connected. Please try again later." });
+    }
     const userId = req.auth?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });

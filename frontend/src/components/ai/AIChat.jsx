@@ -2,20 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { Brain, X } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import PromptInput from "./PromptInput";
-
 const trimTo100Words = (text) => {
   const words = text.split(/\s+/);
   if (words.length > 100) return words.slice(0, 100).join(" ") + "...";
   return text;
 };
-
-function AIChat({ activeFile, onClose, isOpen }) {
+function AIChat({ activeFile, onClose}) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
-
   const callAIApi = async (code, prompt) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/ai`, {
@@ -30,7 +26,6 @@ function AIChat({ activeFile, onClose, isOpen }) {
       return `Connection error: Unable to reach AI service. ${error.message}`;
     }
   };
-
   const handleSubmitMessage = async (userInput) => {
     if (!userInput.trim()) return;
     setMessages((prev) => [...prev, { role: "user", content: userInput, timestamp: new Date() }]);
@@ -41,7 +36,6 @@ function AIChat({ activeFile, onClose, isOpen }) {
     setMessages((prev) => [...prev, { role: "ai", content: trimmedResponse, timestamp: new Date() }]);
     setIsLoading(false);
   };
-
   const handleAnalyzeCode = () => {
     if (!activeFile?.content) return;
     const prompt = `Please analyze this code from ${activeFile.name}:\n\n\`\`\`\n${activeFile.content}\n\`\`\`\n\nProvide suggestions for improvements, potential bugs, and best practices.`;

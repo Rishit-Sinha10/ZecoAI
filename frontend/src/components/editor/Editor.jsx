@@ -172,15 +172,61 @@ function Editor() {
   };
 
   const handleAddFile = () => {
-    const fileName = prompt("Enter file name (e.g., utils.js or src/utils/helper.js):");
-    if (!fileName) return;
+    const rawInput = prompt("Enter one or more file names, separated by new lines or commas (e.g. src/components/Button.jsx\nsrc/utils/helpers.js):");
+    if (!rawInput) return;
 
-    const newFile = { id: Date.now(), name: fileName.trim(), content: `// ${fileName}\n` };
-    const updatedProject = { ...project, files: [...project.files, newFile] };
+    const fileNames = Array.from(
+      new Set(
+        rawInput
+          .split(/[\r\n,]+/)
+          .map((name) => name.trim())
+          .filter(Boolean)
+          .map((name) => name.replace(/\\/g, "/"))
+      )
+    );
+
+    if (fileNames.length === 0) return;
+
+    const hasMainFile = project?.files?.some((file) => file.isMain);
+    const newFiles = fileNames.map((fileName, index) => ({
+      id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+      name: fileName,
+      content: `// ${fileName}\n`,
+      isMain: !hasMainFile && index === 0,
+    }));
+
+    const updatedProject = { ...project, files: [...project.files, ...newFiles] };
+    const firstNewFile = newFiles[0];
 
     setProject(updatedProject);
-    setActiveFileId(newFile.id);
-    setActiveFile(newFile);
+    setActiveFileId(firstNewFile.id);
+    setActiveFile(firstNewFile);
+    persistProject(updatedProject);
+  };
+
+  const handleAddFolder = () => {
+    const folderName = prompt("Enter folder name (e.g. src/components):");
+    if (!folderName) return;
+
+    const normalizedFolder = folderName
+      .trim()
+      .replace(/\\/g, "/")
+      .replace(/^\/+|\/+$/g, "");
+
+    if (!normalizedFolder) return;
+
+    const placeholderFile = {
+      id: `${Date.now()}-folder-${Math.random().toString(36).slice(2, 8)}`,
+      name: `${normalizedFolder}/.gitkeep`,
+      content: "",
+      isMain: false,
+    };
+
+    const updatedProject = { ...project, files: [...project.files, placeholderFile] };
+
+    setProject(updatedProject);
+    setActiveFileId(placeholderFile.id);
+    setActiveFile(placeholderFile);
     persistProject(updatedProject);
   };
 
@@ -234,13 +280,26 @@ function Editor() {
   const handleRunMain = () => setRunTrigger((prev) => prev + 1);
 
   const handleCloseFileTab = (fileId) => {
-    if (project.files.length === 1) return;
+    if (!project?.files || project.files.length <= 1) return;
+    const currentIndex = project.files.findIndex((f) => getFileId(f) === fileId);
+    if (currentIndex === -1) return;
+    const updatedFiles = project.files.filter((f) => getFileId(f) !== fileId);
+    const wasMainFile = project.files[currentIndex]?.isMain;
+    const nextFile = updatedFiles[Math.min(currentIndex, updatedFiles.length - 1)] || updatedFiles[0];
+    const updatedProject = {
+      ...project,
+      files: updatedFiles.map((f, index) => ({
+        ...f,
+        isMain: wasMainFile && index === 0 ? true : f.isMain,
+      })),
+    };
+    setProject(updatedProject);
+    setUnsavedFiles((prev) => prev.filter((id) => id !== fileId));
     if (activeFileId === fileId) {
-      const nextFile = project.files.find((f) => getFileId(f) !== fileId);
       setActiveFileId(getFileId(nextFile));
       setActiveFile(nextFile);
     }
-    setUnsavedFiles((prev) => prev.filter((id) => id !== fileId));
+    persistProject(updatedProject);
   };
 
   if (loading) {
@@ -284,6 +343,7 @@ function Editor() {
               activeFileId={activeFileId}
               onSelectFile={handleSelectFile}
               onAddFile={handleAddFile}
+              onAddFolder={handleAddFolder}
               onDeleteFile={handleDeleteFile}
               onSetMainFile={handleSetMainFile}
               onRenameFile={handleRenameFile}

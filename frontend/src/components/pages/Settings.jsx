@@ -34,7 +34,6 @@ function Settings() {
   const { isLoaded, userId } = useClerkAuth();
   const { logout, isSignedIn } = useAuth();
   const navigate = useNavigate();
-  const { mode } = useTheme();
   const [prefs, setPrefs] = useState(() => {
     try {
       return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem("editor-prefs") || "{}") };

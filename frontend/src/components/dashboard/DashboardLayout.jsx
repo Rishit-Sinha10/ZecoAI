@@ -41,13 +41,15 @@ export default function Dashboard() {
     loadProjects();
   }, [isSignedIn, getToken]);
 
-  const totalFiles = projects.reduce((sum, p) => sum + (p.files?.length || 0), 0);
-  const recentProjects = [...projects]
+  const normalizedProjects = Array.isArray(projects) ? projects : [];
+
+  const totalFiles = normalizedProjects.reduce((sum, p) => sum + (Array.isArray(p.files) ? p.files.length : 0), 0);
+  const recentProjects = [...normalizedProjects]
     .sort((a, b) => new Date(b.updatedAt || b.lastModified) - new Date(a.updatedAt || a.lastModified))
     .slice(0, 5);
 
   const langCounts = {};
-  projects.forEach((p) => {
+  normalizedProjects.forEach((p) => {
     const lang = p.language || "Unknown";
     langCounts[lang] = (langCounts[lang] || 0) + 1;
   });
@@ -112,7 +114,7 @@ export default function Dashboard() {
                 <>
                   <style>{`@keyframes skeleton-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }`}</style>
                   {[
-                    { label: "Projects", value: projects.length, icon: FolderCode, color: "var(--accent)" },
+                    { label: "Projects", value: normalizedProjects.length, icon: FolderCode, color: "var(--accent)" },
                     { label: "Files", value: totalFiles, icon: FileCode, color: "#10b981" },
                     { label: "Languages", value: Object.keys(langCounts).length, icon: BarChart3, color: "#8b5cf6" },
                   ].map(({ label, value, icon: Icon, color }) => (
@@ -169,7 +171,7 @@ export default function Dashboard() {
                   <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: t.text3 }}>
                     Recent Projects
                   </h2>
-                  {projects.length > 0 && (
+                  {normalizedProjects.length > 0 && (
                     <button
                       onClick={() => navigate("/projects")}
                       className="text-xs font-medium flex items-center gap-1 transition-colors"
@@ -258,7 +260,7 @@ export default function Dashboard() {
                       <p className="text-sm" style={{ color: t.text3 }}>No data yet.</p>
                     ) : (
                       topLangs.map(([lang, count]) => {
-                        const pct = Math.round((count / projects.length) * 100);
+                        const pct = normalizedProjects.length > 0 ? Math.round((count / normalizedProjects.length) * 100) : 0;
                         return (
                           <div key={lang}>
                             <div className="flex items-center justify-between mb-1">

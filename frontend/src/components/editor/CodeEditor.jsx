@@ -55,7 +55,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
   const [stdinInput, setStdinInput] = useState("");
   const [showStdin, setShowStdin] = useState(false);
   const [languages, setLanguages] = useState([]);
-  const [runCount, setRunCount] = useState(0);
+
   const [isFixing, setIsFixing] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
   const editorRef = useRef(null);
@@ -130,7 +130,6 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
       setSelectedCode(selection || "");
     });
 
-    let debounceTimer = null;
     let lastRequestTime = 0;
 
     monaco.languages.registerInlineCompletionsProvider("*", {
@@ -214,7 +213,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
     try {
       const result = await executeCode(codeToRun, langToUse, stdinInput);
       setExecutionTime(((Date.now() - startTime) / 1000).toFixed(2));
-      setExitCode(result.exitCode); setMemory(result.memory); setRunCount((c) => c + 1);
+      setExitCode(result.exitCode); setMemory(result.memory); 
       if (result.success) { setTerminalOutput(result.output || "Code executed successfully with no output"); setTerminalError(""); }
       else { setTerminalError(result.error || "Execution failed"); setTerminalOutput(result.output || ""); }
     } catch (err) { setTerminalError(err.message || "Unknown error occurred"); setTerminalOutput(""); }
@@ -396,21 +395,6 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
               <span className="hidden md:inline">AI...</span>
             </div>
           )}
-
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="px-2 py-1 rounded-md text-[11px] font-medium cursor-pointer focus:outline-none transition-colors h-7"
-            style={{ backgroundColor: t.bg3, border: `1px solid ${t.border}`, color: t.text2 }}
-            aria-label="Select language"
-          >
-            {languages.map((lang) => (
-              <option key={lang.id} value={lang.name}>{formatLangName(lang.name)}</option>
-            ))}
-          </select>
-
-          <div className="w-px h-4 mx-1" style={{ backgroundColor: t.border }} />
-
           <button
             onClick={() => setShowStdin(!showStdin)}
             className="flex items-center gap-1.5 px-2 py-1 rounded-md transition-all text-[11px] font-medium h-7"

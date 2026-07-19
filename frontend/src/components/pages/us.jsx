@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import React, { useState, useEffect, useRef} from "react";
+import { useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   Sparkles,
   Zap,
@@ -34,7 +34,6 @@ import {
   Mail,
 } from "lucide-react";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/clerk-react";
-import useTheme from "../../hooks/useTheme";
 import { Link } from "react-router-dom";
 import favicon from "../../../public/favicon.svg";
 
@@ -98,7 +97,6 @@ const LANDING_CSS = `
 .landing .fn{ color:var(--fn); }
 .landing .str{ color:var(--str); }
 .landing .cm{ color:var(--cm); }
-.landing .tag{ color:var(--tag); }
 
 /* buttons */
 .landing .btn-primary{
@@ -251,20 +249,6 @@ function useReveal() {
     return () => io.disconnect();
   }, []);
   return [ref, visible];
-}
-
-function Reveal({ as: Tag = "div", className = "", delay = 0, children, ...rest }) {
-  const [ref, visible] = useReveal();
-  const delayClass = delay ? `reveal-delay-${delay}` : "";
-  return (
-    <Tag
-      ref={ref}
-      className={`reveal ${visible ? "visible" : ""} ${delayClass} ${className}`}
-      {...rest}
-    >
-      {children}
-    </Tag>
-  );
 }
 
 function SectionHeading({ eyebrow, title, desc, center = true }) {
@@ -1290,7 +1274,6 @@ function Footer() {
    APP
    ═══════════════════════════════════════════════════════════════════════ */
 export default function AboutUs() {
-  const [showAnnounce, setShowAnnounce] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="landing">

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, MessageSquare, Brain, Loader2, ChevronRight } from "lucide-react";
 import Navbar from "../common/navbar";
 import MessageBubble from "../ai/MessageBubble";
@@ -9,7 +8,6 @@ import useAuth from "../../hooks/useAuth";
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api`;
 
 function ChatWindow() {
-  const navigate = useNavigate();
   const { isSignedIn, getToken } = useAuth();
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);

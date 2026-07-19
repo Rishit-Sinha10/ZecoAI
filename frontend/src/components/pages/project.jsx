@@ -23,16 +23,23 @@ function Projects() {
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
   const prevSignedInRef = useRef(false);
+  const loadingRef = useRef(false);
   const { toast } = useToast();
   const { isSignedIn, getToken } = useAuth();
 
   useEffect(() => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+
     const handleAuthChange = async () => {
       if (isSignedIn && !prevSignedInRef.current) {
+        prevSignedInRef.current = true;
         await mergeGuestProjects();
+      } else {
+        prevSignedInRef.current = isSignedIn;
       }
-      prevSignedInRef.current = isSignedIn;
-      loadProjects();
+      await loadProjects();
+      loadingRef.current = false;
     };
     handleAuthChange();
   }, [isSignedIn]);
