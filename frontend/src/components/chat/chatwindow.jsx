@@ -131,14 +131,53 @@ function ChatWindow() {
   };
 
   const callAI = async (prompt) => {
-    const res = await fetch(`${API_BASE}/ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "", prompt }),
-    });
-    const data = await res.json();
-    if (data.success) return data.reply;
-    return `Error: ${data.message || "AI request failed"}`;
+    try {
+      const headers = { "Content-Type": "application/json" };
+      const token = await getToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/ai/chat`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: res.statusText }));
+        return `Error: ${error.message || "AI request failed"}`;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullResponse = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.done) break;
+              if (data.error) return `Error: ${data.error}`;
+              if (data.chunk) fullResponse += data.chunk;
+            } catch {
+              // skip parse errors
+            }
+          }
+        }
+      }
+
+      return fullResponse || "No response from AI";
+    } catch (err) {
+      return `Error: ${err.message}`;
+    }
   };
 
   const handleSubmitMessage = async (userInput) => {

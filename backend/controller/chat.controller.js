@@ -70,7 +70,6 @@ export const createChat = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to create chat",
-      error: error.message,
     });
   }
 };
@@ -85,37 +84,29 @@ export const getUserChats = async (req, res) => {
     if (!isDbConnected()) {
       return res.status(503).json({ success: false, message: "Database not connected. Please try again later." });
     }
-    // ✅ userId comes from Clerk token verified by requireAuth() middleware
     const userId = req.auth.userId;
 
     if (!userId) {
-      console.error("[CHAT] No userId in req.auth");
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - no valid session",
-      });
+      return res.status(401).json({ success: false, message: "Unauthorized - no valid session" });
     }
 
-    console.log(`[CHAT] Fetching chats for user: ${userId}`);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
 
-    // Query only this user's chats (security - prevent data leakage)
-    const chats = await Chat.find({ userId })
-      .sort({ createdAt: -1 })
-      .select("_id title createdAt messages");
-
-    console.log(`[CHAT] Found ${chats.length} chats for user ${userId}`);
+    const [chats, total] = await Promise.all([
+      Chat.find({ userId }).sort({ createdAt: -1 }).skip(skip).limit(limit).select("_id title createdAt messages"),
+      Chat.countDocuments({ userId }),
+    ]);
 
     res.json({
       success: true,
       chats,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error("[CHAT] Get Chats Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch chats",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: "Failed to fetch chats" });
   }
 };
 
@@ -163,7 +154,6 @@ export const getChatById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch chat",
-      error: error.message,
     });
   }
 };
@@ -232,7 +222,6 @@ export const addMessageToChat = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to add message",
-      error: error.message,
     });
   }
 };
@@ -283,7 +272,6 @@ export const deleteChat = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to delete chat",
-      error: error.message,
     });
   }
 };

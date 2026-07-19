@@ -1,17 +1,19 @@
 import express from "express";
+import { requireAuth } from "@clerk/express";
 import { handleAI } from "../controller/gemini.controller.js";
 import {
   handleCompletion,
   handleGeneration,
   handleDebug,
+  handleStreamChat,
 } from "../controller/ai.controller.js";
 
 const router = express.Router();
 
-// Existing AI analysis endpoint
-router.post("/", handleAI);
+router.use(requireAuth());
 
-// New AI endpoints
+router.post("/", handleAI);
+router.post("/chat", handleStreamChat);
 router.post("/complete", handleCompletion);
 router.post("/generate", handleGeneration);
 router.post("/debug", handleDebug);

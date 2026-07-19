@@ -1,29 +1,39 @@
-import Groq from "groq-sdk";
-const getGroqClient = () => {
-  return new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-  });
-};
-/**
- * Inline code completion using Groq AI
- * POST /api/ai/complete
- */
+import { z } from "zod";
+import { getAIProvider } from "../services/ai/index.js";
+
+const completionSchema = z.object({
+  code: z.string().max(50000).optional(),
+  language: z.string().max(50).optional(),
+  prefix: z.string().max(50000).optional(),
+  suffix: z.string().max(50000).optional(),
+}).refine((d) => d.code || d.prefix, { message: "Code or prefix is required" });
+
+const generationSchema = z.object({
+  specs: z.string().min(1, "Specifications are required").max(10000),
+  language: z.string().max(50).optional(),
+  filename: z.string().max(200).optional(),
+});
+
+const debugSchema = z.object({
+  code: z.string().min(1, "Code is required").max(50000),
+  language: z.string().max(50).optional(),
+  error: z.string().max(10000).optional(),
+});
+
 export const handleCompletion = async (req, res) => {
   try {
-    const { code, language, prefix, suffix } = req.body;
-    if (!code && !prefix) {
-      return res.status(400).json({
-        success: false,
-        message: "Code or prefix is required",
-      });
+    const parsed = completionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
     }
-    const groq = getGroqClient();
+    const { code, language, prefix, suffix } = parsed.data;
+    const provider = await getAIProvider();
 
     const contextLines = (prefix || "").split("\n");
     const recentLines = contextLines.slice(-30).join("\n");
     const afterLines = (suffix || "").split("\n").slice(0, 10).join("\n");
 
-   const prompt = `You are an inline code completion engine, like an IDE autocomplete. Complete ONLY the code at the cursor position.
+    const prompt = `You are an inline code completion engine, like an IDE autocomplete. Complete ONLY the code at the cursor position.
 Language: ${language || "javascript"}
 Code before cursor:
 ${recentLines}
@@ -39,53 +49,32 @@ RULES:
 - No markdown, no code fences, no explanations, no labels like "Completion:" — output raw code only.
 Insert at <CURSOR>:`;
 
-    const message = await groq.chat.completions.create({
-      messages: [
-        { role: "user", content: prompt },
-      ],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.1,
-      max_tokens: 120,
-      stop: ["\n\n\n", "```", "Explanation:", "Here's", "This code"],
-    });
-
-    let completion = message.choices[0].message.content.trim();
+    let completion = await provider.chat(
+      [{ role: "user", content: prompt }],
+      { temperature: 0.1, maxTokens: 120 }
+    );
+    completion = completion.trim();
     completion = completion.replace(/^```[\w]*\n?/gm, "").replace(/```$/gm, "").trim();
 
     if (completion.length > 500) {
       completion = completion.substring(0, 500);
     }
 
-    res.json({
-      success: true,
-      completion,
-    });
+    res.json({ success: true, completion });
   } catch (error) {
     console.error("Completion Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Completion failed",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: "Completion failed" });
   }
 };
 
-/**
- * Code generation from natural language specs
- * POST /api/ai/generate
- */
 export const handleGeneration = async (req, res) => {
   try {
-    const { specs, language, filename } = req.body;
-
-    if (!specs) {
-      return res.status(400).json({
-        success: false,
-        message: "Specifications are required",
-      });
+    const parsed = generationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
     }
-
-    const groq = getGroqClient();
+    const { specs, language, filename } = parsed.data;
+    const provider = await getAIProvider();
 
     const prompt = `You are an expert ${language || "javascript"} engineer. Generate a complete, production-ready file named "${filename || "generated"}" based on the specification below.
 SPECIFICATION:
@@ -104,52 +93,32 @@ CODE REQUIREMENTS:
 - Add comments only where logic is non-obvious — do not narrate every line.
 - If the specification is ambiguous or incomplete, make the most reasonable, minimal assumption and proceed — do not ask questions or leave TODOs/placeholders.
 - Do not truncate. Output the entire file in full.`;
-    const message = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.3,
-      max_tokens: 2048,
-    });
 
-    const generatedCode = message.choices[0].message.content.trim();
+    const generatedCode = await provider.chat(
+      [{ role: "user", content: prompt }],
+      { temperature: 0.3, maxTokens: 2048 }
+    );
 
     res.json({
       success: true,
-      code: generatedCode,
+      code: generatedCode.trim(),
       language: language || "javascript",
       filename: filename || "generated",
     });
   } catch (error) {
     console.error("Generation Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Code generation failed",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: "Code generation failed" });
   }
 };
 
-/**
- * AI debugging assistant
- * POST /api/ai/debug
- */
 export const handleDebug = async (req, res) => {
   try {
-    const { code, language, error: runtimeError } = req.body;
-
-    if (!code) {
-      return res.status(400).json({
-        success: false,
-        message: "Code is required",
-      });
+    const parsed = debugSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
     }
-
-    const groq = getGroqClient();
+    const { code, language, error: runtimeError } = parsed.data;
+    const provider = await getAIProvider();
 
     const prompt = `You are a debugging assistant. Analyze the code below and fix all issues.
 
@@ -182,55 +151,79 @@ JSON schema:
 }
 
 CRITICAL JSON-SAFETY RULES for "fixedCode":
-- Escape all double quotes as \\"
-- Escape all newlines as \\n (do not use literal line breaks inside the string)
-- Escape all backslashes as \\\\
+- Escape all double quotes as \"
+- Escape all newlines as \n (do not use literal line breaks inside the string)
+- Escape all backslashes as \\
 - Do not wrap the code in markdown backticks inside the string
 - The value must be valid, parseable JSON when the whole response is passed to JSON.parse()
 
 If no errors are found, return "errors": [] and set "fixedCode" equal to the original code, unchanged.`;
 
-    const message = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.1,
-      max_tokens: 4096,
-    });
-
-    const response = message.choices[0].message.content.trim();
+    const response = await provider.chat(
+      [{ role: "user", content: prompt }],
+      { temperature: 0.1, maxTokens: 4096 }
+    );
 
     let analysis;
     try {
-      analysis = JSON.parse(response);
+      analysis = JSON.parse(response.trim());
     } catch {
-      analysis = {
-        errors: [],
-        summary: response,
-        fixedCode: null,
-      };
+      analysis = { errors: [], summary: response.trim(), fixedCode: null };
     }
 
-    res.json({
-      success: true,
-      analysis,
-    });
+    res.json({ success: true, analysis });
   } catch (error) {
     console.error("Debug Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Debug analysis failed",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: "Debug analysis failed" });
   }
 };
 
-export default {
-  handleCompletion,
-  handleGeneration,
-  handleDebug,
+const streamChatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(["user", "assistant", "system"]),
+    content: z.string().max(50000),
+  })).min(1).max(100),
+  projectContext: z.string().max(50000).optional(),
+});
+
+export const handleStreamChat = async (req, res) => {
+  try {
+    const parsed = streamChatSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.errors[0].message });
+    }
+    const { messages, projectContext } = parsed.data;
+    const provider = await getAIProvider();
+
+    const systemMessage = {
+      role: "system",
+      content: `You are ZecoAI, an expert AI coding assistant. You help users write, debug, review, and improve code. Be concise, accurate, and actionable. Use markdown code blocks when showing code. ${projectContext ? `\n\nProject context:\n${projectContext}` : ""}`,
+    };
+
+    const fullMessages = [systemMessage, ...messages];
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    try {
+      for await (const chunk of provider.chatStream(fullMessages, { temperature: 0.7, maxTokens: 4096 })) {
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    } catch (err) {
+      console.error("Stream error:", err.message);
+      res.write(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`);
+    }
+    res.end();
+  } catch (error) {
+    console.error("StreamChat Error:", error.message);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Chat failed" });
+    }
+  }
 };
+
+export default { handleCompletion, handleGeneration, handleDebug, handleStreamChat };

@@ -7,6 +7,13 @@ const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api
 
 let cachedLanguages = null;
 
+const getAuthToken = async (token) => {
+  if (typeof token === "function") {
+    try { return await token(); } catch { return null; }
+  }
+  return token;
+};
+
 /**
  * Fetch available languages from backend (proxies Judge0)
  */
@@ -50,7 +57,7 @@ export const getLanguageId = async (language) => {
 /**
  * Run code and get output
  */
-export const executeCode = async (code, language, stdin = "") => {
+export const executeCode = async (code, language, stdin = "", token) => {
   try {
     const languageId = await getLanguageId(language);
 
@@ -65,11 +72,13 @@ export const executeCode = async (code, language, stdin = "") => {
       };
     }
 
+    const authToken = await getAuthToken(token);
+    const headers = { "Content-Type": "application/json" };
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
     const response = await fetch(`${API_BASE}/run-code`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         code,
         language_id: languageId,

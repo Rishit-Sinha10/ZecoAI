@@ -3,28 +3,25 @@
  * Uses async submission + polling to avoid HTTP timeouts on Docker Desktop
  */
 import CodeRun from "../model/code.model.js";
+import { z } from "zod";
 
 const JUDGE0_URL = process.env.JUDGE0_URL || "http://localhost:2358";
 const POLL_INTERVAL_MS = 500;
 const MAX_POLL_TIME_MS = 60000;
 
+const codeExecutionSchema = z.object({
+  code: z.string().min(1, "Code cannot be empty").max(100000),
+  language_id: z.coerce.number().int().positive("Language ID is required"),
+  stdin: z.string().max(50000).optional().default(""),
+});
+
 export const HandleCode = async (req, res) => {
   try {
-    const { code, language_id, stdin = "" } = req.body;
-
-    if (!code || !code.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: "Code cannot be empty",
-      });
+    const parsed = codeExecutionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, error: parsed.error.errors[0].message });
     }
-
-    if (!language_id) {
-      return res.status(400).json({
-        success: false,
-        error: "Language ID is required",
-      });
-    }
+    const { code, language_id, stdin } = parsed.data;
 
     console.log(`[CODE_EXEC] Language ID: ${language_id}, Code length: ${code.length}...`);
 

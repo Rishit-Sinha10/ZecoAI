@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Sparkles, Loader2, Copy, Check, FileCode } from "lucide-react";
 import { generateCode } from "../../services/aiAPI";
+import useAuth from "../../hooks/useAuth";
 
 const LANGUAGES = [
   { id: "javascript", label: "JavaScript", ext: ".js" },
@@ -21,6 +22,7 @@ export default function CodeGenerator({ isOpen, onClose, onInsertCode }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const { getToken } = useAuth();
 
   const handleGenerate = async () => {
     if (!specs.trim()) {
@@ -32,7 +34,7 @@ export default function CodeGenerator({ isOpen, onClose, onInsertCode }) {
     setGeneratedCode("");
     try {
       const selectedLang = LANGUAGES.find((l) => l.id === language);
-      const result = await generateCode(specs, language, filename || `generated${selectedLang?.ext || ".js"}`);
+      const result = await generateCode(specs, language, filename || `generated${selectedLang?.ext || ".js"}`, getToken);
       if (result.success) setGeneratedCode(result.code);
       else setError(result.message || "Generation failed");
     } catch (err) {

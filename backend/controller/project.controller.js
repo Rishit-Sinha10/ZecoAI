@@ -40,8 +40,19 @@ export const getUserProjects = async (req, res) => {
       return res.status(503).json({ error: "Database not connected. Please try again later." });
     }
     const userId = req.auth.userId;
-    const projects = await Project.find({ userId }).sort({ updatedAt: -1 });
-    res.json(projects);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const [projects, total] = await Promise.all([
+      Project.find({ userId }).sort({ updatedAt: -1 }).skip(skip).limit(limit),
+      Project.countDocuments({ userId }),
+    ]);
+
+    res.json({
+      projects,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
   } catch (err) {
     console.error("[PROJECTS_FETCH_ERROR]", err.message);
     res.status(500).json({ error: "Failed to fetch projects" });

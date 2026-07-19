@@ -7,7 +7,9 @@ import FileTabs from "./FileTabs";
 import CodeEditor from "./CodeEditor";
 import StatusBar from "./StatusBar";
 import FindInProject from "./FindInProject";
+import CommandPalette from "./CommandPalette";
 import AIChat from "../ai/AIChat";
+import PromptModal from "../ui/PromptModal";
 import { useToast } from "../../context/ToastContext";
 import useAuth from "../../hooks/useAuth";
 import {
@@ -26,8 +28,11 @@ function Editor() {
   const [error, setError] = useState(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isFindOpen, setIsFindOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [editorRef, setEditorRef] = useState(null);
   const [unsavedFiles, setUnsavedFiles] = useState([]);
+  const [fileModalOpen, setFileModalOpen] = useState(false);
+  const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [runTrigger, setRunTrigger] = useState(0);
   const { toast } = useToast();
   const { isSignedIn, getToken } = useAuth();
@@ -103,6 +108,37 @@ function Editor() {
 
   const getFileId = (file) => file._id || file.id;
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p" && !e.shiftKey) {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "P") {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleCommandSelect = (item) => {
+    if (item.type === "file") {
+      const file = project?.files?.find((f) => f.name === item.name);
+      if (file) handleSelectFile(getFileId(file));
+    } else if (item.type === "command") {
+      switch (item.id) {
+        case "ai-chat": setIsAIChatOpen(true); break;
+        case "find-in-project": setIsFindOpen(true); break;
+        case "add-file": handleAddFile(); break;
+        case "add-folder": handleAddFolder(); break;
+        case "run-code": setRunTrigger((prev) => prev + 1); break;
+        default: break;
+      }
+    }
+  };
+
   const persistProject = useCallback(async (updatedProject) => {
     const saveToLocal = () => {
       const projects = JSON.parse(localStorage.getItem(GUEST_PROJECTS_KEY)) || [];
@@ -172,9 +208,10 @@ function Editor() {
   };
 
   const handleAddFile = () => {
-    const rawInput = prompt("Enter one or more file names, separated by new lines or commas (e.g. src/components/Button.jsx\nsrc/utils/helpers.js):");
-    if (!rawInput) return;
+    setFileModalOpen(true);
+  };
 
+  const handleFileModalSubmit = (rawInput) => {
     const fileNames = Array.from(
       new Set(
         rawInput
@@ -205,9 +242,10 @@ function Editor() {
   };
 
   const handleAddFolder = () => {
-    const folderName = prompt("Enter folder name (e.g. src/components):");
-    if (!folderName) return;
+    setFolderModalOpen(true);
+  };
 
+  const handleFolderModalSubmit = (folderName) => {
     const normalizedFolder = folderName
       .trim()
       .replace(/\\/g, "/")
@@ -402,6 +440,7 @@ function Editor() {
           <div className="fixed bottom-6 right-6 w-96 h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden" style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-primary)" }}>
             <AIChat
               activeFile={activeFile}
+              project={project}
               isOpen={isAIChatOpen}
               onClose={() => setIsAIChatOpen(false)}
             />
@@ -416,6 +455,30 @@ function Editor() {
             const file = project?.files?.find((f) => f.name === fileName);
             if (file) handleSelectFile(getFileId(file));
           }}
+        />
+
+        <PromptModal
+          isOpen={fileModalOpen}
+          onClose={() => setFileModalOpen(false)}
+          onSubmit={handleFileModalSubmit}
+          title="Add Files"
+          placeholder="src/components/Button.jsx"
+          multiline
+        />
+
+        <PromptModal
+          isOpen={folderModalOpen}
+          onClose={() => setFolderModalOpen(false)}
+          onSubmit={handleFolderModalSubmit}
+          title="Add Folder"
+          placeholder="src/components"
+        />
+
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+          onSelect={handleCommandSelect}
+          files={project?.files || []}
         />
       </div>
     </div>

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { clerkMiddleware } from "@clerk/express";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -10,10 +11,8 @@ import chatRoutes from "./route/chat.route.js";
 import projectRoutes from "./route/project.route.js";
 import codeHistoryRoutes from "./route/codeHistory.route.js";
 import formatRoutes from "./route/format.route.js";
-import { HandleEdit } from "./controller/edit.controller.js";
-import { HandleCode } from "./controller/code.controller.js";
+import codeRoutes from "./route/code.route.js";
 import { HandleLanguages } from "./controller/languages.controller.js";
-import { Upload } from "./controller/upload.controller.js";
 import { getSharedProject } from "./controller/project.controller.js";
 
 export const app = express();
@@ -28,20 +27,22 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(clerkMiddleware());
 
-app.use("/api/ai", aiRoutes);
-app.use("/api/chats", chatRoutes);
-app.use("/api/projects", projectRoutes);
-app.use("/api/runs", codeHistoryRoutes);
-app.use("/api/format", formatRoutes);
-app.use("/api/edit", HandleEdit);
-app.use("/api/run-code", HandleCode);
+const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false, message: { error: "Too many requests, please try again later" } });
+const aiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: { error: "AI rate limit exceeded, please try again later" } });
+const codeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: "Code execution rate limit exceeded" } });
+
+app.use("/api/ai", aiLimiter, aiRoutes);
+app.use("/api/chats", generalLimiter, chatRoutes);
+app.use("/api/projects", generalLimiter, projectRoutes);
+app.use("/api/runs", generalLimiter, codeHistoryRoutes);
+app.use("/api/format", generalLimiter, formatRoutes);
+app.use("/api/run-code", codeLimiter, codeRoutes);
 app.get("/api/languages", HandleLanguages);
-app.use("/api/upload", Upload);
 app.get("/api/share/:shareId", getSharedProject);
 
 app.use((err, req, res, next) => {

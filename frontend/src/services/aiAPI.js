@@ -94,6 +94,56 @@ export const analyzeCode = async (code, prompt, token) => {
 };
 
 /**
+ * Stream chat with AI - returns an async iterator of chunks
+ */
+export const streamChat = async (messages, token, projectContext) => {
+  const url = `${API_BASE}/ai/chat`;
+  const authToken = await getAuthToken(token);
+
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ messages, projectContext }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(error.message || "Chat request failed");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  return {
+    async *[Symbol.asyncIterator]() {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.done) return;
+              if (data.error) throw new Error(data.error);
+              if (data.chunk) yield data.chunk;
+            } catch (e) {
+              if (e.message === "Stream failed" || e.message.includes("Chat request")) throw e;
+            }
+          }
+        }
+      }
+    }
+  };
+};
+
+/**
  * Format code via backend (for languages needing Node-only Prettier plugins)
  */
 export const formatCodeAPI = async (code, language, token) => {
@@ -121,5 +171,6 @@ export default {
   generateCode,
   debugCode,
   analyzeCode,
+  streamChat,
   formatCodeAPI,
 };

@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, Copy, Check, Trash2, Loader2 } from "lucide-react";
-import { shareProjectAPI, unshareProjectAPI } from "../../services/projectAPI";
+import { shareProjectAPI, unshareProjectAPI, createProjectAPI } from "../../services/projectAPI";
+
+function isLocalProject(project) {
+  return project && !project._id;
+}
 
 export default function ShareModal({ project, isOpen, onClose, getToken, isSignedIn, onUpdate }) {
   const [shareId, setShareId] = useState(project?.shareId || null);
@@ -20,13 +24,12 @@ export default function ShareModal({ project, isOpen, onClose, getToken, isSigne
   const shareUrl = shareId ? `${baseUrl}/share/${shareId}` : null;
 
   const handleShare = async () => {
-    const projectId = project?._id || project?.id;
-
     if (!isSignedIn || !getToken) {
       setError("Sign in to generate a share link.");
       return;
     }
 
+    const projectId = project?._id || project?.id;
     if (!projectId) {
       setError("This project is missing a valid ID. Please reopen it from the project list.");
       return;
@@ -35,10 +38,29 @@ export default function ShareModal({ project, isOpen, onClose, getToken, isSigne
     setLoading(true);
     setError(null);
     try {
-      const result = await shareProjectAPI(projectId, getToken);
-      const nextShareId = result?.shareId || project?.shareId;
+      let backendProjectId = project?._id;
+
+      if (isLocalProject(project)) {
+        try {
+          const created = await createProjectAPI(
+            project.name,
+            project.description || "",
+            getToken
+          );
+          backendProjectId = created._id;
+          onUpdate?.(created);
+        } catch (syncErr) {
+          console.error("Failed to sync local project:", syncErr);
+          setError("Failed to sync project to server. Make sure you are connected.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const result = await shareProjectAPI(backendProjectId, getToken);
+      const nextShareId = result?.shareId;
       setShareId(nextShareId);
-      onUpdate?.({ ...project, shareId: nextShareId });
+      onUpdate?.({ ...project, _id: backendProjectId, shareId: nextShareId });
     } catch (err) {
       console.error("Share failed:", err);
       setError(err?.message || "Failed to generate share link.");
@@ -48,15 +70,14 @@ export default function ShareModal({ project, isOpen, onClose, getToken, isSigne
   };
 
   const handleRevoke = async () => {
-    const projectId = project?._id || project?.id;
-
     if (!isSignedIn || !getToken) {
       setError("Sign in to manage share links.");
       return;
     }
 
+    const projectId = project?._id;
     if (!projectId) {
-      setError("This project is missing a valid ID. Please reopen it from the project list.");
+      setError("Cannot revoke: project is not synced to the server.");
       return;
     }
 

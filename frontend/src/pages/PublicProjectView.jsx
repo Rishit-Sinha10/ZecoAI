@@ -39,6 +39,8 @@ function PublicProjectView() {
         const mainFile = data.files.find((f) => f.isMain);
         setActiveFile(mainFile || data.files[0]);
       }
+    } catch (err) {
+      setError(err?.message || "Failed to load shared project");
     } finally {
       setLoading(false);
     }

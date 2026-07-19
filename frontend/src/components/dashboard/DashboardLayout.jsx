@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FolderCode,
@@ -19,27 +19,56 @@ import { getUserProjectsAPI } from "../../services/projectAPI";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken, isLoaded, loading: authLoading } = useAuth();
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadProjects = async () => {
+      if (!isLoaded || authLoading) {
+        return;
+      }
+
       setLoading(true);
+
       if (isSignedIn) {
         try {
           const data = await getUserProjectsAPI(getToken);
-          setProjects(data);
-        } catch {
-          setProjects(JSON.parse(localStorage.getItem("projects")) || []);
+          const normalized = Array.isArray(data?.projects)
+            ? data.projects
+            : Array.isArray(data)
+              ? data
+              : [];
+
+          if (!cancelled) {
+            setProjects(normalized);
+            localStorage.setItem("projects", JSON.stringify(normalized));
+          }
+        } catch (error) {
+          if (!cancelled) {
+            const saved = JSON.parse(localStorage.getItem("projects") || "[]");
+            setProjects(Array.isArray(saved) ? saved : []);
+          }
         }
       } else {
-        setProjects(JSON.parse(localStorage.getItem("projects")) || []);
+        if (!cancelled) {
+          const saved = JSON.parse(localStorage.getItem("projects") || "[]");
+          setProjects(Array.isArray(saved) ? saved : []);
+        }
       }
-      setLoading(false);
+
+      if (!cancelled) {
+        setLoading(false);
+        hasLoadedRef.current = true;
+      }
     };
+
     loadProjects();
-  }, [isSignedIn, getToken]);
+    return () => { cancelled = true; };
+  }, [isLoaded, authLoading, isSignedIn, getToken]);
 
   const normalizedProjects = Array.isArray(projects) ? projects : [];
 

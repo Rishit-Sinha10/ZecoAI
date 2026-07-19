@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, FileCode, Download, Upload } from "lucide-react";
 import Navbar from "../common/navbar";
 import ProjectCard from "../common/projectcard";
+import PromptModal from "../ui/PromptModal";
 import { useToast } from "../../context/ToastContext";
 import useAuth from "../../hooks/useAuth";
 import {
@@ -20,6 +21,9 @@ function Projects() {
   const [projects, setProjects] = useState([]);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
   const prevSignedInRef = useRef(false);
@@ -72,15 +76,15 @@ function Projects() {
     try {
       if (isSignedIn) {
         const data = await getUserProjectsAPI(getToken);
-        setProjects(data);
+        setProjects(Array.isArray(data.projects) ? data.projects : Array.isArray(data) ? data : []);
       } else {
-        const saved = JSON.parse(localStorage.getItem(GUEST_PROJECTS_KEY)) || [];
-        setProjects(saved);
+        const saved = JSON.parse(localStorage.getItem(GUEST_PROJECTS_KEY));
+        setProjects(Array.isArray(saved) ? saved : []);
       }
     } catch (err) {
       console.error("Failed to load projects from backend, falling back to localStorage:", err.message);
-      const saved = JSON.parse(localStorage.getItem(GUEST_PROJECTS_KEY)) || [];
-      setProjects(saved);
+      const saved = JSON.parse(localStorage.getItem(GUEST_PROJECTS_KEY));
+      setProjects(Array.isArray(saved) ? saved : []);
     } finally {
       setLoading(false);
     }
@@ -145,17 +149,24 @@ function Projects() {
   const handleOpen = (project) => navigate(`/editor/${project._id || project.id}`);
 
   const handleEdit = async (project) => {
-    const editedName = prompt("Edit project name:", project.name);
-    if (!editedName || !editedName.trim()) return;
+    setRenameTarget(project);
+    setRenameValue(project.name);
+    setRenameModalOpen(true);
+  };
 
-    const id = project._id || project.id;
+  const handleRenameSubmit = async (newName) => {
+    if (!renameTarget) return;
+    const editedName = newName.trim();
+    if (!editedName) return;
+
+    const id = renameTarget._id || renameTarget.id;
     setProjects((prev) =>
-      prev.map((p) => (p.id === id || p._id === id ? { ...p, name: editedName.trim() } : p))
+      prev.map((p) => (p.id === id || p._id === id ? { ...p, name: editedName } : p))
     );
 
-    if (isSignedIn && project._id) {
+    if (isSignedIn && renameTarget._id) {
       try {
-        await updateProjectAPI(project._id, { name: editedName.trim() }, getToken);
+        await updateProjectAPI(renameTarget._id, { name: editedName }, getToken);
         toast.success("Project renamed");
         return;
       } catch (err) {
@@ -164,7 +175,7 @@ function Projects() {
     }
 
     const updated = projects.map((p) =>
-      p.id === id ? { ...p, name: editedName.trim(), lastModified: new Date().toISOString() } : p
+      p.id === id ? { ...p, name: editedName, lastModified: new Date().toISOString() } : p
     );
     localStorage.setItem(GUEST_PROJECTS_KEY, JSON.stringify(updated));
     toast.success("Project renamed locally");
@@ -305,6 +316,15 @@ function Projects() {
           </div>
         </div>
       )}
+
+      <PromptModal
+        isOpen={renameModalOpen}
+        onClose={() => { setRenameModalOpen(false); setRenameTarget(null); }}
+        onSubmit={handleRenameSubmit}
+        title="Rename Project"
+        placeholder="Project name"
+        defaultValue={renameValue}
+      />
     </div>
   );
 }

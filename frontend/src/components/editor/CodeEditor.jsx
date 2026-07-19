@@ -17,6 +17,7 @@ import CodeGenerator from "./CodeGenerator";
 import { executeCode, fetchLanguages } from "../../services/codeAPI";
 import { getCompletion, debugCode, formatCodeAPI } from "../../services/aiAPI";
 import { useToast } from "../../context/ToastContext";
+import useAuth from "../../hooks/useAuth";
 import "./Terminal.css";
 
 const detectLanguage = (filename) => {
@@ -61,6 +62,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
   const editorRef = useRef(null);
   const stdinRef = useRef(null);
   const { toast } = useToast();
+  const { getToken } = useAuth();
 
   useEffect(() => { fetchLanguages().then(setLanguages); }, []);
 
@@ -149,7 +151,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
 
         try {
           setIsCompleting(true);
-          const result = await getCompletion(model.getValue(), language, textUntil, textAfter);
+          const result = await getCompletion(model.getValue(), language, textUntil, textAfter, getToken);
           if (result.success && result.completion && !token.isCancellationRequested) {
             const lines = result.completion.split("\n");
             const insertText = lines.join("\n");
@@ -211,7 +213,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
     setTerminalOutput(""); setTerminalError(""); setExecutionTime(0); setExitCode(null); setMemory(null);
     const startTime = Date.now();
     try {
-      const result = await executeCode(codeToRun, langToUse, stdinInput);
+      const result = await executeCode(codeToRun, langToUse, stdinInput, getToken);
       setExecutionTime(((Date.now() - startTime) / 1000).toFixed(2));
       setExitCode(result.exitCode); setMemory(result.memory); 
       if (result.success) { setTerminalOutput(result.output || "Code executed successfully with no output"); setTerminalError(""); }
@@ -228,7 +230,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
     if (!editorContent || !terminalError) return;
     setIsFixing(true);
     try {
-      const result = await debugCode(editorContent, language, terminalError);
+      const result = await debugCode(editorContent, language, terminalError, getToken);
       if (result.success && result.analysis) {
         const { errors, summary, fixedCode } = result.analysis;
 
@@ -330,7 +332,7 @@ function CodeEditor({ activeFile, project, onContentChange, onOpenAI, runTrigger
         onContentChange(formatted);
         toast.success("Code formatted");
       } else if (backendLangMap[ext]) {
-        const result = await formatCodeAPI(editorContent, backendLangMap[ext]);
+        const result = await formatCodeAPI(editorContent, backendLangMap[ext], getToken);
         if (result.success && result.formatted) {
           setEditorContent(result.formatted);
           onContentChange(result.formatted);
