@@ -1,9 +1,14 @@
-import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, MessageSquare, Brain, Loader2, ChevronRight } from "lucide-react";
-import Navbar from "../common/navbar";
-import MessageBubble from "../ai/MessageBubble";
-import PromptInput from "../ai/PromptInput";
-import useAuth from "../../hooks/useAuth";
+import { useState, useEffect, useRef } from "react"
+import { Plus, Trash2, MessageSquare, Brain, Loader2 } from "lucide-react"
+import Navbar from "../common/navbar"
+import MessageBubbleAI from "../ai/MessageBubble"
+import PromptInput from "../ai/PromptInput"
+import useAuth from "../../hooks/useAuth"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Marker } from "@/components/ui/marker"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api`;
 
@@ -15,6 +20,7 @@ function ChatWindow() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingChats, setLoadingChats] = useState(true);
   const messagesEndRef = useRef(null);
+
   useEffect(() => {
     if (isSignedIn) fetchChats();
     else {
@@ -241,11 +247,10 @@ function ChatWindow() {
           {/* Chat list sidebar */}
           <div className="w-64 flex flex-col shrink-0" style={{ borderRight: `1px solid ${t.border}`, backgroundColor: t.bg2 }}>
             <div className="p-3" style={{ borderBottom: `1px solid ${t.border}` }}>
-              <button onClick={createNewChat}
-                className="w-full flex items-center justify-center gap-2 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                style={{ backgroundColor: "var(--accent)" }}>
-                <Plus size={16} />New Chat
-              </button>
+              <Button onClick={createNewChat} className="w-full" size="sm">
+                <Plus size={16} />
+                New Chat
+              </Button>
             </div>
             <div className="flex-1 overflow-y-auto py-1">
               {loadingChats ? (
@@ -259,7 +264,8 @@ function ChatWindow() {
                 </div>
               ) : (
                 chats.map((chat) => (
-                  <div key={chat._id}
+                  <div
+                    key={chat._id}
                     onClick={() => selectChat(chat)}
                     className="flex items-center gap-2 px-3 py-2.5 mx-1 rounded-md cursor-pointer transition-colors group"
                     style={{
@@ -267,61 +273,70 @@ function ChatWindow() {
                       color: activeChat?._id === chat._id ? "var(--accent)" : "var(--text-secondary)",
                     }}
                     onMouseEnter={(e) => { if (activeChat?._id !== chat._id) e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"; }}
-                    onMouseLeave={(e) => { if (activeChat?._id !== chat._id) e.currentTarget.style.backgroundColor = "transparent"; }}>
+                    onMouseLeave={(e) => { if (activeChat?._id !== chat._id) e.currentTarget.style.backgroundColor = "transparent"; }}
+                  >
                     <MessageSquare size={14} className="shrink-0" />
                     <span className="text-sm truncate flex-1">{chat.title || "New Chat"}</span>
-                    <button onClick={(e) => deleteChat(chat._id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"
-                      style={{ color: t.text3 }}>
-                      <Trash2 size={12} />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => deleteChat(chat._id, e)}
+                        >
+                          <Trash2 size={12} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete chat</TooltipContent>
+                    </Tooltip>
                   </div>
                 ))
               )}
             </div>
           </div>
 
+          <Separator orientation="vertical" />
+
           {/* Main chat area */}
           <div className="flex-1 flex flex-col min-w-0">
             {!activeChat ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <div className="rounded-full p-4 mb-4" style={{ backgroundColor: t.bg3 }}>
-                  <Brain size={40} style={{ color: "#fbbf24" }} />
-                </div>
+                <Avatar size="lg" className="mb-4">
+                  <AvatarFallback>
+                    <Brain size={32} style={{ color: "#fbbf24" }} />
+                  </AvatarFallback>
+                </Avatar>
                 <h2 className="text-2xl font-bold mb-2" style={{ color: t.text }}>ZecoAI Chat</h2>
                 <p className="text-sm mb-6 max-w-md" style={{ color: t.text3 }}>
                   Ask questions, get code explanations, debug errors, or brainstorm ideas.
                 </p>
-                <button onClick={createNewChat}
-                  className="flex items-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors"
-                  style={{ backgroundColor: "var(--accent)" }}>
-                  <Plus size={18} />Start a Conversation
-                </button>
+                <Button onClick={createNewChat} size="lg">
+                  <Plus size={18} />
+                  Start a Conversation
+                </Button>
               </div>
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto p-6 space-y-4">
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center">
-                      <Brain size={32} className="mb-3" style={{ color: "#fbbf24", opacity: 0.5 }} />
+                      <Avatar className="mb-3">
+                        <AvatarFallback>
+                          <Brain size={24} style={{ color: "#fbbf24" }} />
+                        </AvatarFallback>
+                      </Avatar>
                       <p className="text-sm" style={{ color: t.text3 }}>Ask me anything about code...</p>
                     </div>
                   ) : (
                     <>
                       {messages.map((msg, i) => (
-                        <MessageBubble key={i} message={msg} isUser={msg.role === "user"} />
+                        <MessageBubbleAI key={i} message={msg} isUser={msg.role === "user"} />
                       ))}
                       {isLoading && (
                         <div className="flex justify-start mb-4">
                           <div className="rounded-lg px-4 py-3" style={{ backgroundColor: t.bg3, border: `1px solid ${t.border}` }}>
-                            <div className="flex items-center gap-2">
-                              <div className="flex gap-1">
-                                <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "#fbbf24" }} />
-                                <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "#fbbf24", animationDelay: "0.1s" }} />
-                                <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: "#fbbf24", animationDelay: "0.2s" }} />
-                              </div>
-                              <span className="text-xs" style={{ color: t.text3 }}>Thinking...</span>
-                            </div>
+                            <Marker variant="typing" />
                           </div>
                         </div>
                       )}
@@ -329,6 +344,7 @@ function ChatWindow() {
                     </>
                   )}
                 </div>
+                <Separator />
                 <PromptInput onSubmit={handleSubmitMessage} isLoading={isLoading} placeholder="Ask ZecoAI something..." />
               </>
             )}
