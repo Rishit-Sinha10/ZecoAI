@@ -293,81 +293,6 @@ function SectionHeading({ eyebrow, title, desc, center = true }) {
     </Reveal>
   );
 }
-
-/* Mouse-follow glow component */
-function MouseGlow({ className = "" }) {
-  const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 200, damping: 25 });
-  const springY = useSpring(y, { stiffness: 200, damping: 25 });
-
-  const handleMouseMove = useCallback((e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    x.set(e.clientX - rect.left);
-    y.set(e.clientY - rect.top);
-  }, [x, y]);
-
-  return (
-    <div ref={ref} onMouseMove={handleMouseMove} className={className}>
-      <motion.div
-        className="absolute w-[300px] h-[300px] rounded-full pointer-events-none z-0"
-        style={{
-          left: springX,
-          top: springY,
-          x: "-50%",
-          y: "-50%",
-          background: "radial-gradient(circle, var(--glow-primary), transparent 70%)",
-          opacity: 0,
-        }}
-        whileHover={{ opacity: 0.15 }}
-      />
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   ANNOUNCEMENT BAR
-   ═══════════════════════════════════════════════════════════════════════ */
-
-function AnnouncementBar({ onClose }) {
-  return (
-    <div className="announce">
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 text-sm relative">
-        <span
-          className="font-mono text-xs px-2 py-0.5 rounded-full"
-          style={{
-            background: "var(--accent-light)",
-            border: "1px solid var(--glass-border)",
-            color: "var(--text-primary)",
-          }}
-        >
-          NEW
-        </span>
-        <span style={{ color: "var(--text-secondary)" }}>
-          AI Project Generation is live — describe an app, get a working repo.
-        </span>
-        <a
-          href="#hero"
-          className="font-medium inline-flex items-center gap-1 hover:underline"
-          style={{ color: "var(--accent)" }}
-        >
-          Try now <ArrowRight size={14} />
-        </a>
-        <button
-          onClick={onClose}
-          aria-label="Dismiss announcement"
-          className="absolute right-4 transition-colors"
-          style={{ color: "var(--text-tertiary)" }}
-        >
-          <X size={14} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════════════════
    NAV
    ═══════════════════════════════════════════════════════════════════════ */
@@ -381,12 +306,15 @@ function Nav({ mobileOpen, setMobileOpen }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const links = ["Features", "Templates", "Pricing", "Docs"];
+  const links = ["Features", "Templates","Docs"];
 
   return (
     <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <a href="#hero" className="flex items-center gap-2 font-display font-semibold text-lg">
+        <a
+          href="#hero"
+          className="flex items-center gap-2 font-display font-semibold text-lg"
+        >
           <img src={favicon} alt="ZecoAI" width={18} height={18} />
           Zeco<span style={{ color: "var(--accent)" }}>AI</span>
         </a>
@@ -397,7 +325,10 @@ function Nav({ mobileOpen, setMobileOpen }) {
               {l}
             </a>
           ))}
-          <a href="#" className="nav-link flex items-center gap-1.5">
+          <a
+            href="https://github.com/Rishit-Sinha10/ZecoAI"
+            className="nav-link flex items-center gap-1.5"
+          >
             <Github size={15} /> GitHub
           </a>
         </div>
@@ -414,7 +345,10 @@ function Nav({ mobileOpen, setMobileOpen }) {
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <Link to="/dashboard" className="btn-primary text-sm px-4 py-2 rounded-lg">
+            <Link
+              to="/dashboard"
+              className="btn-primary text-sm px-4 py-2 rounded-lg"
+            >
               Dashboard
             </Link>
           </SignedIn>
@@ -439,14 +373,26 @@ function Nav({ mobileOpen, setMobileOpen }) {
           }}
         >
           {links.map((l) => (
-            <a key={l} href={`#${l.toLowerCase()}`} className="nav-link" onClick={() => setMobileOpen(false)}>
+            <a
+              key={l}
+              href={`#${l.toLowerCase()}`}
+              className="nav-link"
+              onClick={() => setMobileOpen(false)}
+            >
               {l}
             </a>
           ))}
-          <a href="#" className="nav-link">GitHub</a>
+          <a
+            href="https://github.com/Rishit-Sinha10/ZecoAI"
+            className="nav-link"
+          >
+            GitHub
+          </a>
           <SignedOut>
             <SignInButton mode="modal" afterSignInUrl="/dashboard">
-              <button className="nav-link cursor-pointer text-left">Sign in</button>
+              <button className="nav-link cursor-pointer text-left">
+                Sign in
+              </button>
             </SignInButton>
             <SignInButton mode="modal" afterSignInUrl="/dashboard">
               <button className="btn-primary text-sm px-4 py-2.5 rounded-lg text-center cursor-pointer w-full">
@@ -455,7 +401,10 @@ function Nav({ mobileOpen, setMobileOpen }) {
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <Link to="/dashboard" className="btn-primary text-sm px-4 py-2.5 rounded-lg text-center">
+            <Link
+              to="/dashboard"
+              className="btn-primary text-sm px-4 py-2.5 rounded-lg text-center"
+            >
               Dashboard
             </Link>
           </SignedIn>
@@ -658,18 +607,11 @@ function Hero() {
         style={{ background: "radial-gradient(circle, var(--glow-secondary), transparent 70%)" }} />
 
       <div className="max-w-5xl mx-auto text-center relative z-10">
-        <Reveal
-          className="inline-flex items-center gap-2 font-mono text-xs px-3 py-1.5 rounded-full mb-7"
-          style={{ border: "1px solid var(--glass-border)", background: "var(--glass-bg)", color: "var(--text-secondary)" }}>
-          <Sparkles size={12} style={{ color: "var(--accent)" }} /> AI-NATIVE CODING WORKSPACE
-        </Reveal>
-
         <Reveal delay={1} as="h1"
           className="font-display font-semibold text-[2.6rem] leading-[1.05] sm:text-6xl sm:leading-[1.03] md:text-7xl md:leading-[.98]">
           Build. Run. Debug.
           <br className="hidden sm:block" /> <span className="text-grad">Ship.</span>
         </Reveal>
-
         <Reveal delay={2} as="p"
           className="mt-6 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
           style={{ color: "var(--text-secondary)" }}>
@@ -723,18 +665,12 @@ function BentoCard({ children, className = "", delay = 0, span = "" }) {
   const glowX = useSpring(x, { stiffness: 200, damping: 25 });
   const glowY = useSpring(y, { stiffness: 200, damping: 25 });
 
-  const handleMouseMove = useCallback((e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    x.set(e.clientX - rect.left);
-    y.set(e.clientY - rect.top);
-  }, [x, y]);
+ 
 
   return (
     <Reveal delay={delay}>
       <motion.div
         ref={ref}
-        onMouseMove={handleMouseMove}
         className={`bento-card-premium p-6 sm:p-8 flex flex-col ${span} ${className}`}
         whileHover={{ y: -4, transition: { duration: 0.3, ease: "easeOut" } }}
       >
@@ -766,14 +702,14 @@ const BENTO_FEATURES = [
   {
     icon: Bug,
     title: "Debug in Seconds",
-    desc: "Instantly understand errors, identify root causes, and receive AI-generated fixes before opening Stack Overflow.",
+    desc: "Instantly understand errors, identify root causes, and receive AI-generated fixes before opening Stack Overflow. and give inline suggestion for app to get correct approach or method to correct the code",
     visual: "debug",
     accentColor: "#ef4444",
   },
   {
     icon: MessageSquare,
     title: "Chat with Your Entire Project",
-    desc: "Ask questions about any file, architecture, or codebase. ZecoAI understands your workspace and responds with contextual answers.",
+    desc: "Ask questions about any file, function, component, or architecture, and get intelligent, context-aware answers. ZecoAI analyzes your entire workspace to explain code, trace dependencies, and help you understand complex projects faster.",
     visual: "chat",
     accentColor: "#8b5cf6",
   },
@@ -788,7 +724,7 @@ const BENTO_FEATURES = [
   {
     icon: LayoutTemplate,
     title: "Launch from Templates",
-    desc: "Start with production-ready templates for React, Next.js, Express, Flask, Node.js, and modern frameworks instead of a blank project.",
+    desc: "Go from idea to code instantly with production-ready starter templates. Launch React, Next.js, Express, Flask, Node.js, and other modern applications with optimized project structures, essential tooling, and best practices built in.",
     visual: "templates",
     accentColor: "#f59e0b",
   },
@@ -812,6 +748,13 @@ const BENTO_FEATURES = [
     desc: "Every execution happens inside isolated containers to ensure safety, reliability, and predictable environments.",
     visual: "security",
     accentColor: "#10b981",
+  },
+  {
+    icon: Sparkles,
+    title: "Edit Code with AI",
+    desc: "Highlight any code and describe the change in plain English. ZecoAI intelligently rewrites, refactors, optimizes, documents, or fixes your code while preserving your project's style and context.",
+    visual: "inline-edit",
+    accentColor: "#14b8a6",
   },
 ];
 
@@ -851,9 +794,9 @@ function AiGenerateVisual() {
 
 function DebugVisual() {
   return (
-    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 100 }}>
+    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 160 }}>
       <div className="p-3 space-y-2">
-        <div className="flex items-center gap-2 text-[11px] font-mono">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono">
           <span style={{ color: "#ef4444" }}>TypeError</span>
           <span style={{ color: "var(--text-tertiary)" }}>Cannot read properties of undefined</span>
         </div>
@@ -871,7 +814,7 @@ function DebugVisual() {
 
 function ChatVisual() {
   return (
-    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 100 }}>
+    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 140 }}>
       <div className="p-3 space-y-2">
         <div className="flex items-start gap-2">
           <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--accent-light)" }}>
@@ -921,7 +864,7 @@ function TemplatesVisual() {
     { name: "React", color: "#4C8DFF" },
   ];
   return (
-    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 100 }}>
+    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 140 }}>
       <div className="p-3 grid grid-cols-2 gap-2">
         {tpls.map((t) => (
           <div key={t.name} className="rounded-lg px-3 py-2.5 text-[11px] font-mono font-medium flex items-center gap-2"
@@ -938,7 +881,7 @@ function TemplatesVisual() {
 function FilesVisual() {
   const files = ["src/", "  components/", "    Header.jsx", "    Footer.jsx", "  utils/", "    api.js", "package.json"];
   return (
-    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 100 }}>
+    <div className="mt-4 flex-1 rounded-xl overflow-hidden" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 140 }}>
       <div className="px-3 py-2 flex items-center gap-1.5" style={{ borderBottom: "1px solid var(--glass-border)" }}>
         <Folder size={10} style={{ color: "var(--text-tertiary)" }} />
         <span className="font-mono text-[10px]" style={{ color: "var(--text-tertiary)" }}>explorer</span>
@@ -986,16 +929,29 @@ function SecurityVisual() {
     </div>
   );
 }
+function editcodewithai(){
+  return(
+     <div className="mt-4 flex-1 rounded-xl overflow-hidden flex items-center justify-center" style={{ background: "var(--bg-tertiary)", border: "1px solid var(--glass-border)", minHeight: 200 }}>
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full" style={{ border: "2px solid var(--str)", animation: "pulseRing 2s ease-out infinite", width: 56, height: 56, top: -8, left: -8 }} />
+        <div className="w-10 h-10 rounded-full flex items-center justify-center relative z-10" style={{ background: "var(--accent-light)", border: "1px solid var(--glass-border)" }}>
+          <Lock size={16} style={{ color: "var(--accent)" }} />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const VISUAL_MAP = {
   "ai-generate": AiGenerateVisual,
-  "debug": DebugVisual,
-  "chat": ChatVisual,
-  "terminal": TerminalVisual,
-  "templates": TemplatesVisual,
-  "files": FilesVisual,
-  "cloud": CloudVisual,
-  "security": SecurityVisual,
+  debug: DebugVisual,
+  chat: ChatVisual,
+  terminal: TerminalVisual,
+  templates: TemplatesVisual,
+  files: FilesVisual,
+  cloud: CloudVisual,
+  security: SecurityVisual,
+  "Edit Code with AI": editcodewithai,
 };
 
 function Features() {
@@ -1235,39 +1191,22 @@ const FOOTER_COLS = [
     links: [
       { label: "Features", href: "#features" },
       { label: "Templates", href: "#templates" },
-      { label: "Pricing", href: "#pricing" },
-      { label: "Changelog", href: "#" },
-      { label: "Roadmap", href: "#", badge: "Coming Soon" },
+      { label: "Changelog", href: "/changelog" },
     ],
   },
   {
     title: "Developers",
     links: [
-      { label: "Documentation", href: "#" },
-      { label: "API Reference", href: "#" },
       { label: "SDKs", href: "#", badge: "Coming Soon" },
-      { label: "GitHub", href: "#" },
-      { label: "Status", href: "#" },
+      { label: "GitHub", href: "https://github.com/Rishit-Sinha10/ZecoAI" },
     ],
   },
   {
     title: "Resources",
     links: [
       { label: "Blog", href: "#" },
-      { label: "Tutorials", href: "#" },
       { label: "Examples", href: "#" },
       { label: "FAQs", href: "#pricing" },
-      { label: "Community", href: "#", badge: "Discord" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
-      { label: "Press Kit", href: "#" },
-      { label: "Partners", href: "#" },
     ],
   },
   {
@@ -1275,16 +1214,17 @@ const FOOTER_COLS = [
     links: [
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "#" },
-      { label: "Security", href: "#" },
+      { label: "Security", href: "/security" },
     ],
   },
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Github, href: "https://github.com/zecoai", label: "GitHub" },
-  { icon: ExternalLink, href: "#", label: "LinkedIn" },
-  { icon: ExternalLink, href: "#", label: "X" },
+  {
+    icon: Github,
+    href: "https://github.com/Rishit-Sinha10/ZecoAI",
+    label: "GitHub",
+  },
   { icon: Mail, href: "mailto:hello@zecoai.dev", label: "Email" },
 ];
 
@@ -1292,8 +1232,8 @@ function Footer() {
   return (
     <footer style={{ borderTop: "1px solid var(--border)", background: "var(--bg-secondary)" }}>
       {/* Main footer grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-10 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-40 pt-16 pb-12 flex ">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-4">
           {/* Brand column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
             <a href="#hero" className="flex items-center gap-2 font-display font-semibold text-lg mb-3">
@@ -1327,8 +1267,7 @@ function Footer() {
                     <a href={link.href}
                       className="text-sm inline-flex items-center gap-1.5 transition-colors"
                       style={{ color: "var(--text-secondary)" }}
-                      onMouseEnter={(e) => e.target.style.color = "var(--text-primary)"}
-                      onMouseLeave={(e) => e.target.style.color = "var(--text-secondary)"}>
+                      >
                       {link.label}
                       {link.badge && (
                         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
@@ -1343,48 +1282,19 @@ function Footer() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="px-4 sm:px-6" style={{ borderTop: "1px solid var(--border)" }}>
-        <div className="max-w-7xl mx-auto py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3 text-xs" style={{ color: "var(--text-tertiary)" }}>
-            <span>&copy; 2026 ZecoAI</span>
-            <span className="hidden sm:inline">·</span>
-            <span>Build faster. Learn deeper. Ship sooner.</span>
-            <span className="hidden sm:inline">·</span>
-            <span>Made with <span style={{ color: "#ef4444" }}>&#9829;</span> by Rishit Sinha</span>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Version badge */}
-            <span className="font-mono text-[10px] px-2 py-1 rounded-md"
-              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", color: "var(--text-tertiary)" }}>
-              v1.0.0
-            </span>
-            {/* System status */}
-            <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
-              <span className="w-2 h-2 rounded-full" style={{ background: "#10b981" }} />
-              <span>All Systems Operational</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </div>    
     </footer>
   );
 }
-
 /* ═══════════════════════════════════════════════════════════════════════
    APP
    ═══════════════════════════════════════════════════════════════════════ */
-
 export default function AboutUs() {
   const [showAnnounce, setShowAnnounce] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-
   return (
     <div className="landing">
       <style>{LANDING_CSS}</style>
-      {showAnnounce && <AnnouncementBar onClose={() => setShowAnnounce(false)} />}
       <Nav mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <Hero />
       <Features />

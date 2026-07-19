@@ -23,17 +23,21 @@ export const handleCompletion = async (req, res) => {
     const recentLines = contextLines.slice(-30).join("\n");
     const afterLines = (suffix || "").split("\n").slice(0, 10).join("\n");
 
-    const prompt = `Complete the code. Return ONLY the completion text, no explanations, no markdown, no backticks.
-
+   const prompt = `You are an inline code completion engine, like an IDE autocomplete. Complete ONLY the code at the cursor position.
 Language: ${language || "javascript"}
-
-Before cursor:
+Code before cursor:
 ${recentLines}
-
-After cursor:
+<CURSOR>
+Code after cursor:
 ${afterLines}
-
-Completion:`;
+RULES:
+- Output ONLY the text that should be inserted at <CURSOR>. Do not repeat "before cursor" or "after cursor" content.
+- Do not duplicate anything already present in "Code after cursor" — assume it stays exactly as-is following your insertion.
+- Match the existing indentation, style, and naming conventions exactly.
+- Keep the completion minimal and contextually appropriate — typically one line to a few lines, not an entire function or file, unless the immediate context clearly requires more (e.g., completing an open block).
+- If the surrounding code is empty or gives no clear signal, return an empty string rather than guessing unrelated boilerplate.
+- No markdown, no code fences, no explanations, no labels like "Completion:" — output raw code only.
+Insert at <CURSOR>:`;
 
     const message = await groq.chat.completions.create({
       messages: [
@@ -83,19 +87,23 @@ export const handleGeneration = async (req, res) => {
 
     const groq = getGroqClient();
 
-    const prompt = `You are an expert code generator. Generate complete, production-ready code based on the following specifications.
-
-Specifications: ${specs}
-Language: ${language || "javascript"}
-Filename: ${filename || "generated"}
-
-Rules:
-- Generate complete, working code
-- Include proper imports if needed
-- Add minimal comments for complex logic
-- Follow best practices for the language
-- Return ONLY the code, no explanations or markdown`;
-
+    const prompt = `You are an expert ${language || "javascript"} engineer. Generate a complete, production-ready file named "${filename || "generated"}" based on the specification below.
+SPECIFICATION:
+${specs}
+OUTPUT CONTRACT (STRICT):
+- Output raw source code only — no markdown, no triple backticks, no code fences, no JSON wrapping.
+- No prose before or after the code: no "Here's the code", no explanations, no summaries.
+- First character of your response = first character of the code. Last character = last character of the code. Nothing else.
+- If you are about to add a closing remark or fence, delete it before responding.
+CODE REQUIREMENTS:
+- Fully working, self-contained code unless the spec explicitly requires multiple files.
+- Include all necessary imports/dependencies.
+- Follow idiomatic best practices and standard formatting/linting conventions for ${language || "javascript"}.
+- Handle realistic edge cases and errors (invalid input, null/undefined, async failures) rather than only the happy path.
+- Use the filename "${filename || "generated"}" for naming conventions where relevant (e.g., class/module name, exports).
+- Add comments only where logic is non-obvious — do not narrate every line.
+- If the specification is ambiguous or incomplete, make the most reasonable, minimal assumption and proceed — do not ask questions or leave TODOs/placeholders.
+- Do not truncate. Output the entire file in full.`;
     const message = await groq.chat.completions.create({
       messages: [
         {
@@ -143,32 +151,44 @@ export const handleDebug = async (req, res) => {
 
     const groq = getGroqClient();
 
-    const prompt = `You are a debugging assistant. Fix the code based on the error.
+    const prompt = `You are a debugging assistant. Analyze the code below and fix all issues.
 
 Language: ${language || "javascript"}
 
 Code:
-\`\`\`
 ${code}
-\`\`\`
 
-${runtimeError ? `Runtime Error:\n${runtimeError}` : ""}
+${runtimeError ? `Runtime Error:\n${runtimeError}` : "No runtime error was provided — check for logical, syntax, and best-practice issues."}
 
-Return a JSON response with this exact structure:
+TASK:
+1. Identify every bug: the runtime error above (if provided) AND any other logical, syntax, type, or edge-case issues you find.
+2. Produce a fully corrected version of the entire file.
+
+OUTPUT FORMAT (STRICT):
+Return ONLY a single valid JSON object. No markdown, no code fences, no commentary before or after.
+
+JSON schema:
 {
   "errors": [
     {
-      "line": <line_number>,
-      "message": "<error description>",
+      "line": <number, best estimate based on the original code above>,
+      "message": "<concise description of the issue>",
       "severity": "error" | "warning",
-      "fix": "<suggested fix>"
+      "fix": "<concise description of what was changed and why>"
     }
   ],
-  "summary": "<brief summary of issues found and fixed>",
-  "fixedCode": "<the complete corrected code, fully working>"
+  "summary": "<1-2 sentence summary of what was wrong and what was fixed>",
+  "fixedCode": "<the complete corrected file as a single string>"
 }
 
-IMPORTANT: "fixedCode" must contain the FULL corrected code, not a snippet. Return ONLY valid JSON, no other text.`;
+CRITICAL JSON-SAFETY RULES for "fixedCode":
+- Escape all double quotes as \\"
+- Escape all newlines as \\n (do not use literal line breaks inside the string)
+- Escape all backslashes as \\\\
+- Do not wrap the code in markdown backticks inside the string
+- The value must be valid, parseable JSON when the whole response is passed to JSON.parse()
+
+If no errors are found, return "errors": [] and set "fixedCode" equal to the original code, unchanged.`;
 
     const message = await groq.chat.completions.create({
       messages: [

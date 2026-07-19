@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Shield } from "lucide-react";
-
+import favicon from "../../../public/favicon.svg"
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
@@ -11,7 +11,9 @@ export default function PrivacyPolicy() {
             Back to ZecoAI
           </Link>
           <div className="flex items-center gap-2">
-            <Shield size={16} style={{ color: "var(--accent)" }} />
+            <Link to="/">
+            <img src={favicon} alt="ZecoAI" width={18} height={18} />
+            </Link>
             <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>ZecoAI</span>
           </div>
         </div>

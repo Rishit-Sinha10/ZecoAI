@@ -19,6 +19,9 @@ import Templates from './components/pages/Templates'
 import NotFound from './components/pages/Notfound'
 import PrivacyPolicy from './components/pages/PrivacyPolicy'
 import TermsOfService from './components/pages/TermsOfService'
+import Documentation from './components/pages/Documentation'
+import Security from './components/pages/Security'
+import Changelog from './components/pages/Changelog'
 
 function AppInner() {
   const { toasts, removeToast } = useToast();
@@ -30,6 +33,9 @@ function AppInner() {
         <Route path="/share/:shareId" element={<PublicProjectView />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/docs" element={<Documentation />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/changelog" element={<Changelog />} />
         <Route path="/dashboard" element={<AuthGuard><Dashboard/></AuthGuard>} />
         <Route path="/projects" element={<AuthGuard><Projects/></AuthGuard>}/>
         <Route path="/editor/:id" element={<AuthGuard><Editor /></AuthGuard>} />
