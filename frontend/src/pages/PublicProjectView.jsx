@@ -39,8 +39,6 @@ function PublicProjectView() {
         const mainFile = data.files.find((f) => f.isMain);
         setActiveFile(mainFile || data.files[0]);
       }
-    } catch (err) {
-      setError("Shared project not found or link has been revoked.");
     } finally {
       setLoading(false);
     }

@@ -251,6 +251,25 @@ function useReveal() {
   return [ref, visible];
 }
 
+function Reveal({ as = "div", delay = 0, className = "", children, ...props }) {
+  const [ref, visible] = useReveal();
+  const Component = as;
+  const revealClasses = [
+    "reveal",
+    visible ? "visible" : "",
+    delay ? `reveal-delay-${Math.min(delay, 4)}` : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <Component ref={ref} className={revealClasses} {...props}>
+      {children}
+    </Component>
+  );
+}
+
 function SectionHeading({ eyebrow, title, desc, center = true }) {
   return (
     <Reveal className={`mb-14 ${center ? "text-center max-w-2xl mx-auto" : ""}`}>
