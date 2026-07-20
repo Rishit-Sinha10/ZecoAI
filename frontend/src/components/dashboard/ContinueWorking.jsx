@@ -1,7 +1,13 @@
 import { useNavigate } from "react-router-dom"
 import {
-  FolderCode, Clock, MessageSquare, FileCode,
-  GitBranch, ArrowRight, Sparkles
+  FolderCode,
+  Clock,
+  FileCode,
+  GitBranch,
+  ArrowRight,
+  Sparkles,
+  Share2,
+  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -34,16 +40,14 @@ export default function ContinueWorking({ projects = [] }) {
 
   const recent = [...projects]
     .sort((a, b) => new Date(b.updatedAt || b.lastModified || 0) - new Date(a.updatedAt || a.lastModified || 0))
-    .slice(0, 5)
+    .slice(0, 4)
 
   if (recent.length === 0) {
     return (
-      <Card style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
+      <Card className="rounded-[24px] border border-[var(--border)] bg-white shadow-sm">
         <CardContent className="p-6 text-center">
-          <FolderCode size={32} className="mx-auto mb-3" style={{ color: "var(--text-tertiary)", opacity: 0.3 }} />
-          <p className="text-sm mb-3" style={{ color: "var(--text-tertiary)" }}>
-            No projects yet. Create one to get started.
-          </p>
+          <FolderCode size={32} className="mx-auto mb-3 text-[var(--text-tertiary)] opacity-30" />
+          <p className="mb-3 text-sm text-[var(--text-tertiary)]">No projects yet. Create one to get started.</p>
           <Button size="sm" onClick={() => navigate("/projects")}>
             <FolderCode size={14} /> Create Project
           </Button>
@@ -53,61 +57,103 @@ export default function ContinueWorking({ projects = [] }) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
-          Continue Working
-        </h3>
-        {projects.length > 5 && (
-          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => navigate("/projects")}>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-tertiary)]">Continue working</p>
+          <h3 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">Focused project lanes</h3>
+        </div>
+        {projects.length > 4 && (
+          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => navigate("/projects")}>
             View all <ArrowRight size={12} />
           </Button>
         )}
       </div>
-      <div className="space-y-2">
+
+      <div className="space-y-3">
         {recent.map((project) => {
           const pid = project._id || project.id
           const fileCount = Array.isArray(project.files) ? project.files.length : 0
           const lang = project.language || "Unknown"
           const langColor = langColors[lang] || "var(--accent)"
+          const progress = Math.min(96, Math.max(34, fileCount * 7 + (project.aiUsage || 0)))
 
           return (
             <Card
               key={pid}
-              className="group cursor-pointer transition-all duration-200 hover:shadow-md"
-              style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}
+              className="group cursor-pointer rounded-[20px] border border-[var(--border)] bg-white shadow-[0_10px_28px_rgba(17,24,39,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(109,93,246,0.12)]"
               onClick={() => navigate(`/editor/${pid}`)}
             >
-              <CardContent className="p-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-transform group-hover:scale-105" style={{ backgroundColor: `${langColor}18` }}>
-                    <FolderCode size={18} style={{ color: langColor }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
-                      {project.name}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                        <FileCode size={10} /> {fileCount} file{fileCount !== 1 ? "s" : ""}
-                      </span>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                        {lang}
-                      </Badge>
-                      <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                        <MessageSquare size={10} /> {Math.floor(Math.random() * 5)} AI chats
-                      </span>
+              <CardContent className="p-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-[16px] shadow-sm"
+                      style={{ backgroundColor: `${langColor}18` }}
+                    >
+                      <FolderCode size={18} style={{ color: langColor }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{project.name}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-tertiary)]">
+                        <span className="flex items-center gap-1"><GitBranch size={10} /> {project.branch || "main"}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} /> {formatTimeAgo(project.updatedAt || project.lastModified)}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                      <Clock size={10} /> {formatTimeAgo(project.updatedAt || project.lastModified)}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate(`/chat`) }}>
-                        <Sparkles size={12} style={{ color: "var(--accent)" }} />
-                      </Button>
+
+                  <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-[14px] bg-[var(--bg-tertiary)] px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Framework</p>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <Badge variant="secondary" className="rounded-full px-2 text-[10px]">{lang}</Badge>
+                      </div>
                     </div>
+                    <div className="rounded-[14px] bg-[var(--bg-tertiary)] px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Collaborators</p>
+                      <div className="mt-1.5 flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+                        <Users size={12} /> 3 active
+                      </div>
+                    </div>
+                    <div className="rounded-[14px] bg-[var(--bg-tertiary)] px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">AI Usage</p>
+                      <div className="mt-1.5 flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+                        <Sparkles size={12} className="text-[var(--accent)]" /> {Math.max(12, fileCount * 5)}k tokens
+                      </div>
+                    </div>
+                    <div className="rounded-[14px] bg-[var(--bg-tertiary)] px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Deploy</p>
+                      <div className="mt-1.5 flex items-center gap-1 text-xs text-emerald-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> production ready
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="mb-1 flex items-center justify-between text-[11px] text-[var(--text-tertiary)]">
+                      <span>Progress</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[var(--bg-tertiary)]">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${progress}%`, background: "linear-gradient(90deg, #6D5DF6, #8b5cf6)" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${pid}`) }}>
+                      Open
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/chat`) }}>
+                      Continue
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                      <Share2 size={14} />
+                    </Button>
                   </div>
                 </div>
               </CardContent>

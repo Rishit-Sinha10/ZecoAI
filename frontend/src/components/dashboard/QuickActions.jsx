@@ -1,45 +1,73 @@
+import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import {
-  Plus, Sparkles, Bug, FileCode, FolderCode,
-  LayoutTemplate, ArrowRight, Code2
+  Plus,
+  Sparkles,
+  Bug,
+  FileCode,
+  FolderCode,
+  LayoutTemplate,
+  ArrowRight,
+  Code2,
 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
 
 const actions = [
-  { label: "New Project", icon: Plus, desc: "Start building something new", color: "var(--accent)", path: "/projects" },
-  { label: "AI Pair Programmer", icon: Sparkles, desc: "Get real-time code assistance", color: "#8b5cf6", path: "/chat" },
-  { label: "Debug Code", icon: Bug, desc: "Find and fix errors fast", color: "#ef4444", path: "/chat" },
-  { label: "Generate Boilerplate", icon: FileCode, desc: "Scaffold entire projects", color: "#f59e0b", path: "/chat" },
-  { label: "Create API", icon: FolderCode, desc: "Build REST APIs in seconds", color: "#06b6d4", path: "/chat" },
-  { label: "Open Editor", icon: Code2, desc: "Start coding with AI", color: "#10b981", path: "/projects" },
-  { label: "Templates", icon: LayoutTemplate, desc: "Browse starter templates", color: "#ec4899", path: "/templates" },
-  { label: "Refactor Code", icon: ArrowRight, desc: "Improve code quality", color: "#14b8a6", path: "/chat" },
+  { label: "New Project", icon: Plus, desc: "Start building something new",path: "/projects" },
+  { label: "Open Editor", icon: Code2, desc: "Jump into your active workspace",path: "/projects" },
+  { label: "AI Chat", icon: Sparkles, desc: "Ask for implementation help instantly",path: "/chat" },
+  { label: "Generate App", icon: FileCode, desc: "Scaffold the next product fast",path: "/chat" },
+  { label: "Debug Code", icon: Bug, desc: "Surface failures and patch them",path: "/chat" },
+  { label: "Refactor Code", icon: ArrowRight, desc: "Clean up structure and naming",path: "/chat" },
+  { label: "Generate API", icon: FolderCode, desc: "Build endpoints with context",path: "/chat" },
+  { label: "Templates", icon: LayoutTemplate, desc: "Browse premium starter patterns",path: "/templates" },
 ]
 
 export default function QuickActions() {
   const navigate = useNavigate()
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
-        Quick Actions
-      </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {actions.map(({ label, icon: Icon, desc, color, path }) => (
-          <Card
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-tertiary)]">Quick actions</p>
+          <h3 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">Jump into your next move</h3>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {actions.map(({ label, icon: Icon, desc, shortcut, color, path }) => (
+          <motion.button
             key={label}
-            className="group cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
-            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}
+            whileHover={{ y: -4, scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            transition={{ duration: 0.18 }}
             onClick={() => navigate(path)}
+            className="group relative overflow-hidden rounded-[20px] border border-[var(--border)] bg-white p-4 text-left shadow-[0_10px_30px_rgba(17,24,39,0.05)] transition-all duration-200 hover:shadow-[0_20px_45px_rgba(109,93,246,0.12)]"
           >
-            <CardContent className="p-3.5">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg mb-2 transition-transform group-hover:scale-110" style={{ backgroundColor: `${color}15` }}>
+            <div
+              className="absolute inset-x-0 top-0 h-1 rounded-t-[20px]"
+              style={{ background: `linear-gradient(90deg, ${color}, transparent)` }}
+            />
+            <div className="flex items-start justify-between gap-3">
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-[14px] shadow-sm"
+                style={{ background: `linear-gradient(135deg, ${color}1f, ${color}33)` }}
+              >
                 <Icon size={18} style={{ color }} />
               </div>
-              <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{label}</p>
-              <p className="text-[11px] mt-0.5 leading-tight" style={{ color: "var(--text-tertiary)" }}>{desc}</p>
-            </CardContent>
-          </Card>
+              <span className="rounded-full border border-[var(--border)] bg-[var(--bg-tertiary)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-tertiary)]">
+                {shortcut}
+              </span>
+            </div>
+
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{label}</p>
+                <ArrowRight size={14} className="text-[var(--text-tertiary)] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              </div>
+              <p className="text-xs leading-5 text-[var(--text-secondary)]">{desc}</p>
+            </div>
+          </motion.button>
         ))}
       </div>
     </div>

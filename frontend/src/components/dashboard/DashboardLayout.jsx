@@ -2,17 +2,9 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import Navbar from "../common/navbar"
 import DashboardHero from "./DashboardHero"
-import StatsGrid from "./StatsGrid"
-import AIInsights from "./AIInsights"
 import ActivityTimeline from "./ActivityTimeline"
-import ContinueWorking from "./ContinueWorking"
-import AIChatHistory from "./AIChatHistory"
 import ProductivityAnalytics from "./ProductivityAnalytics"
-import LanguageAnalytics from "./LanguageAnalytics"
 import QuickActions from "./QuickActions"
-import GoalsWidget from "./GoalsWidget"
-import AITip from "./AITip"
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -20,6 +12,17 @@ import useAuth from "../../hooks/useAuth"
 import { getUserProjectsAPI } from "../../services/projectAPI"
 
 const API_BASE = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api`
+
+const toArray = (value) => {
+  if (Array.isArray(value)) return value
+  if (value && typeof value === "object") {
+    if (Array.isArray(value.chats)) return value.chats
+    if (Array.isArray(value.projects)) return value.projects
+    if (Array.isArray(value.items)) return value.items
+    if (Array.isArray(value.data)) return value.data
+  }
+  return []
+}
 
 function DashboardSkeleton() {
   return (
@@ -102,9 +105,7 @@ export default function Dashboard() {
 
           if (!cancelled) {
             if (projData.status === "fulfilled") {
-              const normalized = Array.isArray(projData.value?.projects)
-                ? projData.value.projects
-                : Array.isArray(projData.value) ? projData.value : []
+              const normalized = toArray(projData.value?.projects || projData.value)
               setProjects(normalized)
               localStorage.setItem("projects", JSON.stringify(normalized))
             } else {
@@ -113,7 +114,7 @@ export default function Dashboard() {
             }
 
             if (chatData.status === "fulfilled") {
-              setChats(chatData.value?.chats || chatData.value || [])
+              setChats(toArray(chatData.value))
             }
           }
         } catch {
@@ -139,7 +140,8 @@ export default function Dashboard() {
     return () => { cancelled = true }
   }, [isLoaded, authLoading, isSignedIn, getToken])
 
-  const normalizedProjects = Array.isArray(projects) ? projects : []
+  const normalizedProjects = toArray(projects)
+  const normalizedChats = toArray(chats)
   const userName = user?.firstName || user?.username || ""
 
   return (
@@ -152,55 +154,24 @@ export default function Dashboard() {
               {loading ? (
                 <DashboardSkeleton />
               ) : (
-                <ResizablePanelGroup direction="horizontal" autoSaveId="dashboard-layout">
-                  {/* Main Content */}
-                  <ResizablePanel defaultSize={72} minSize={50}>
+                
                     <div className="space-y-8 pr-6">
                       {/* Hero */}
                       <DashboardHero
                         projects={normalizedProjects}
-                        chats={chats}
+                        chats={normalizedChats}
                         userName={userName}
                       />
-
                       {/* Quick Actions */}
                       <QuickActions />
-
-                      {/* Stats */}
-                      <StatsGrid projects={normalizedProjects} chats={chats} />
-
                       {/* Analytics + Activity */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2">
-                          <ProductivityAnalytics projects={normalizedProjects} chats={chats} />
+                          <ProductivityAnalytics projects={normalizedProjects} chats={normalizedChats} />
                         </div>
-                        <ActivityTimeline chats={chats} projects={normalizedProjects} />
+                        <ActivityTimeline chats={normalizedChats} projects={normalizedProjects} />
                       </div>
-
-                      {/* Continue Working + Language Analytics */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2">
-                          <ContinueWorking projects={normalizedProjects} />
-                        </div>
-                        <LanguageAnalytics projects={normalizedProjects} />
-                      </div>
-
-                      {/* AI Insights */}
-                      <AIInsights projects={normalizedProjects} chats={chats} />
                     </div>
-                  </ResizablePanel>
-
-                  <ResizableHandle withHandle />
-
-                  {/* Sidebar */}
-                  <ResizablePanel defaultSize={28} minSize={20} maxSize={35}>
-                    <div className="space-y-4 pl-6">
-                      <AIChatHistory chats={chats} />
-                      <GoalsWidget projects={normalizedProjects} chats={chats} />
-                      <AITip />
-                    </div>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
               )}
             </div>
           </div>

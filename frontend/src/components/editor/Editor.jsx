@@ -437,7 +437,10 @@ function Editor() {
         </div>
 
         {isAIChatOpen && (
-          <div className="fixed bottom-6 right-6 w-96 h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden" style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-primary)" }}>
+          <div
+            className="fixed bottom-3 right-3 left-3 z-50 flex flex-col overflow-hidden rounded-xl shadow-2xl sm:bottom-6 sm:right-6 sm:left-auto sm:w-96 sm:h-[28rem] w-[calc(100vw-1.5rem)] max-w-[24rem] h-[min(28rem,calc(100vh-1.5rem))] max-h-[calc(100vh-1.5rem)]"
+            style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-primary)" }}
+          >
             <AIChat
               activeFile={activeFile}
               project={project}

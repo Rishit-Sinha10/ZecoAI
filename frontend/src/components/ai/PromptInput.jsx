@@ -55,9 +55,9 @@ function PromptInput({ onSubmit, isLoading, placeholder = "Ask ZecoAI...", onAtt
     >
       <AttachmentList attachments={attachments} onRemove={removeAttachment} />
 
-      <form onSubmit={handleSubmit}>
-        <div className="flex gap-3 items-end">
-          <div className="flex-1">
+      <form onSubmit={handleSubmit} className="min-w-0">
+        <div className="flex gap-3 items-end sm:flex-row flex-col">
+          <div className="flex-1 w-full min-w-0">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -68,7 +68,7 @@ function PromptInput({ onSubmit, isLoading, placeholder = "Ask ZecoAI...", onAtt
               className="resize-none text-sm min-h-[80px]"
             />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
             {onAttach && (
               <Tooltip>
                 <TooltipTrigger asChild>

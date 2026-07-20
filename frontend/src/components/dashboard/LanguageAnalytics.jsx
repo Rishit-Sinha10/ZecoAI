@@ -19,12 +19,10 @@ export default function LanguageAnalytics({ projects = [] }) {
   const langData = useMemo(() => {
     const counts = {}
     const lines = {}
-    const aiUsage = {}
     projects.forEach((p) => {
       const lang = p.language || "Unknown"
       counts[lang] = (counts[lang] || 0) + 1
       lines[lang] = (lines[lang] || 0) + (Array.isArray(p.files) ? p.files.length * 145 : 145)
-      aiUsage[lang] = (aiUsage[lang] || 0) + Math.floor(Math.random() * 10) + 1
     })
 
     const totalProjects = projects.length || 1
@@ -34,7 +32,6 @@ export default function LanguageAnalytics({ projects = [] }) {
         count,
         percentage: Math.round((count / totalProjects) * 100),
         lines: lines[name] || 0,
-        aiUsage: aiUsage[name] || 0,
         color: langColors[name] || "var(--accent)",
       }))
       .sort((a, b) => b.count - a.count)

@@ -77,7 +77,7 @@ function AIChat({ activeFile, project, onClose }) {
 
   return (
     <div
-      className="flex flex-col h-full rounded overflow-hidden"
+      className="flex min-h-0 min-w-0 flex-col h-full rounded overflow-hidden"
       style={{ backgroundColor: t.bg, border: `1px solid ${t.border}` }}
     >
       {/* Header */}

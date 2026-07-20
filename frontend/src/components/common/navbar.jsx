@@ -2,8 +2,6 @@ import { useState } from "react"
 import { Code2, Settings, LogOut, ArrowLeft, Search, Command } from "lucide-react"
 import { UserAvatar } from "@clerk/clerk-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import ThemeToggle from "../ui/ThemeToggle"
-import NotificationCenter from "../dashboard/NotificationCenter"
 import CommandPalette from "../dashboard/CommandPalette"
 import useAuth from "../../hooks/useAuth"
 import { Button } from "@/components/ui/button"
@@ -100,12 +98,7 @@ export default function Navbar() {
               </TooltipTrigger>
               <TooltipContent>Command palette</TooltipContent>
             </Tooltip>
-
             <div className="w-px h-4 mx-0.5" style={{ backgroundColor: "var(--border)" }} />
-
-            <NotificationCenter />
-            <ThemeToggle />
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link

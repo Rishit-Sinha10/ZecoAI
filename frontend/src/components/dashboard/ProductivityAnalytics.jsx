@@ -24,11 +24,23 @@ function CustomTooltip({ active, payload, label }) {
 export default function ProductivityAnalytics({ projects = [], chats = [] }) {
   const chartData = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    const requests = days.map((d) => ({
-      name: d,
-      requests: Math.floor(Math.random() * 20) + 2,
-      tokens: Math.floor(Math.random() * 500) + 50,
-    }))
+    const requests = days.map((name) => ({ name, requests: 0, tokens: 0 }))
+    const codeTrend = days.map((name) => ({ name, lines: 0 }))
+
+    chats.forEach((chat) => {
+      const date = new Date(chat.createdAt || chat.updatedAt || 0)
+      if (Number.isNaN(date.getTime())) return
+      const dayIndex = (date.getDay() + 6) % 7
+      requests[dayIndex].requests += 1
+      requests[dayIndex].tokens += Array.isArray(chat.messages) ? chat.messages.length * 25 : 0
+    })
+
+    projects.forEach((project) => {
+      const date = new Date(project.updatedAt || project.lastModified || 0)
+      if (Number.isNaN(date.getTime())) return
+      const dayIndex = (date.getDay() + 6) % 7
+      codeTrend[dayIndex].lines += Array.isArray(project.files) ? project.files.length * 145 : 0
+    })
 
     const langCounts = {}
     projects.forEach((p) => {
@@ -39,22 +51,22 @@ export default function ProductivityAnalytics({ projects = [], chats = [] }) {
       .sort((a, b) => b.value - a.value)
       .slice(0, 5)
 
-    if (languages.length === 0) {
-      languages.push(
-        { name: "JavaScript", value: 40 },
-        { name: "TypeScript", value: 30 },
-        { name: "Python", value: 20 },
-        { name: "Other", value: 10 },
-      )
-    }
-
-    const codeTrend = days.map((d) => ({
-      name: d,
-      lines: Math.floor(Math.random() * 500) + 50,
-    }))
-
     return { requests, languages, codeTrend }
   }, [projects, chats])
+
+  if (chartData.languages.length === 0 && chartData.requests.every((entry) => entry.requests === 0) && chartData.codeTrend.every((entry) => entry.lines === 0)) {
+    return (
+      <Card style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 size={16} style={{ color: "var(--accent)" }} />
+            <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Productivity Analytics</h3>
+          </div>
+          <p className="text-sm text-center py-6" style={{ color: "var(--text-tertiary)" }}>No activity data yet. Start a chat or create a project to populate analytics.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border)" }}>

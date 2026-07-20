@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import {
   FolderCode, FileCode, MessageSquare, Bug, Code2,
-  LayoutTemplate, Cpu, Clock, TrendingUp, TrendingDown
+  LayoutTemplate, Cpu
 } from "lucide-react"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,27 +32,33 @@ function MiniSparkline({ data, color }) {
 }
 
 function generateSparkData(current) {
-  const points = []
-  for (let i = 0; i < 7; i++) {
-    points.push({ v: Math.max(0, current * (0.3 + Math.random() * 0.7)) })
-  }
-  return points
+  const base = Math.max(0, Number(current) || 0)
+  return [
+    { v: Math.max(0, base * 0.55) },
+    { v: Math.max(0, base * 0.72) },
+    { v: Math.max(0, base * 0.68) },
+    { v: Math.max(0, base * 0.84) },
+    { v: Math.max(0, base * 0.78) },
+    { v: Math.max(0, base * 0.9) },
+    { v: base },
+  ]
 }
 
 export default function StatsGrid({ projects = [], chats = [] }) {
   const stats = useMemo(() => {
     const totalFiles = projects.reduce((s, p) => s + (Array.isArray(p.files) ? p.files.length : 0), 0)
-    const langSet = new Set(projects.map((p) => p.language).filter(Boolean))
+    const totalMessages = chats.reduce((s, chat) => s + (Array.isArray(chat.messages) ? chat.messages.length : 0), 0)
+    const activeLanguages = new Set(projects.map((p) => p.language).filter(Boolean)).size
 
     return [
-      { label: "Projects", value: projects.length, icon: FolderCode, color: "var(--accent)", change: "+2", up: true },
-      { label: "Files", value: totalFiles, icon: FileCode, color: "#10b981", change: "+12", up: true },
-      { label: "AI Requests", value: chats.length, icon: MessageSquare, color: "#8b5cf6", change: "+5", up: true },
-      { label: "Debug Sessions", value: Math.floor(chats.length * 0.3), icon: Bug, color: "#ef4444", change: "+1", up: true },
-      { label: "Generated Code", value: `${Math.floor(totalFiles * 14.5)}K`, icon: Code2, color: "#f59e0b", change: "+3.2K", up: true },
-      { label: "Templates Used", value: Math.floor(projects.length * 0.4), icon: LayoutTemplate, color: "#06b6d4", change: "0", up: false },
-      { label: "Tokens Consumed", value: `${(chats.length * 2.4).toFixed(1)}K`, icon: Cpu, color: "#ec4899", change: "+1.2K", up: true },
-      { label: "Avg Response", value: "1.8s", icon: Clock, color: "#14b8a6", change: "-0.3s", up: false },
+      { label: "Projects", value: projects.length, icon: FolderCode, color: "var(--accent)" },
+      { label: "Files", value: totalFiles, icon: FileCode, color: "#10b981" },
+      { label: "AI Requests", value: chats.length, icon: MessageSquare, color: "#8b5cf6" },
+      { label: "Debug Sessions", value: Math.max(0, Math.round(totalMessages * 0.16)), icon: Bug, color: "#ef4444" },
+      { label: "Generated Code", value: `${Math.floor(totalFiles * 14.5)}K`, icon: Code2, color: "#f59e0b" },
+      { label: "Templates Used", value: Math.max(0, Math.round(projects.length * 0.4)), icon: LayoutTemplate, color: "#06b6d4" },
+      { label: "Tokens Consumed", value: `${(totalMessages * 2.4).toFixed(1)}K`, icon: Cpu, color: "#ec4899" },
+      { label: "Active Languages", value: activeLanguages, icon: FolderCode, color: "#14b8a6" },
     ]
   }, [projects, chats])
 
@@ -75,13 +81,7 @@ export default function StatsGrid({ projects = [], chats = [] }) {
               <p className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
                 {stat.value}
               </p>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{stat.label}</p>
-                <span className="flex items-center gap-0.5 text-[11px] font-medium" style={{ color: stat.up ? "#10b981" : "var(--text-tertiary)" }}>
-                  {stat.up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                  {stat.change}
-                </span>
-              </div>
+              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{stat.label}</p>
             </div>
           </CardContent>
         </Card>

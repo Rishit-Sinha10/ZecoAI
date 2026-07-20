@@ -1,9 +1,15 @@
 import { useMemo } from "react"
+import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { Sparkles, FolderCode, MessageSquare, Zap } from "lucide-react"
+import {
+  Sparkles,
+  FolderCode,
+  MessageSquare,
+  Zap,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
+import LanguageAnalytics from "./LanguageAnalytics"
 function getGreeting() {
   const h = new Date().getHours()
   if (h < 12) return "Good Morning"
@@ -37,9 +43,9 @@ export default function DashboardHero({ projects = [], chats = [], userName }) {
       projectCount: projects.length,
       fileCount: totalFiles,
       lastActive: formatTimeAgo(lastActive?.toISOString()),
+      usageProgress: Math.min(88, Math.round((chats.length * 12 + totalFiles * 3) % 90)),
     }
   }, [projects, chats])
-
   const lastProject = projects.length > 0
     ? [...projects].sort((a, b) => new Date(b.updatedAt || b.lastModified || 0) - new Date(a.updatedAt || a.lastModified || 0))[0]
     : null
@@ -47,52 +53,51 @@ export default function DashboardHero({ projects = [], chats = [], userName }) {
   const greeting = getGreeting()
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-          {greeting}{userName ? `, ${userName}` : ""}
-        </h1>
-        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
-          Welcome back to your AI workspace.
-        </p>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(109,93,246,0.09),rgba(255,255,255,0.92)_45%,rgba(109,93,246,0.04))] shadow-[0_18px_60px_rgba(17,24,39,0.06)]"
+    >
+      <div className="grid gap-6 p-6 xl:grid-cols-[1.55fr_0.9fr] xl:p-7">
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:text-4xl">
+                {greeting}{userName ? `, ${userName}` : ""} 
+              </h1>
+              <p className="max-w-2xl text-sm text-[var(--text-secondary)]">
+                Continue where you left off with a calm, focused developer environment built for shipping fast.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
+              <FolderCode size={12} />
+              {stats.projectCount} projects
+            </Badge>
+            <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs">
+              <Zap size={12} />
+              {stats.fileCount} files edited
+            </Badge>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: "Projects", value: `${stats.projectCount}`, accent: "#14b8a6" },
+              { label: "Files Edited", value: `${stats.fileCount}`, accent: "#f59e0b" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-[18px] border border-white/80 bg-white/80 p-4 shadow-sm backdrop-blur">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{item.label}</p>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-xl font-semibold text-[var(--text-primary)]">{item.value}</span>
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.accent }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <LanguageAnalytics projects={projects} />
+        </div>
       </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="gap-1.5">
-          <Sparkles size={12} style={{ color: "var(--accent)" }} />
-          {stats.aiRequests} AI Requests Today
-        </Badge>
-        <Badge variant="secondary" className="gap-1.5">
-          <FolderCode size={12} />
-          {stats.projectCount} Projects
-        </Badge>
-        <Badge variant="secondary" className="gap-1.5">
-          <Zap size={12} />
-          {stats.fileCount} Files
-        </Badge>
-        <Badge variant="secondary" className="gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          Last Active {stats.lastActive}
-        </Badge>
-      </div>
-
-      <div className="flex items-center gap-3">
-        {lastProject ? (
-          <Button size="sm" onClick={() => navigate(`/editor/${lastProject._id || lastProject.id}`)}>
-            <FolderCode size={14} />
-            Continue Last Project
-          </Button>
-        ) : (
-          <Button size="sm" onClick={() => navigate("/projects")}>
-            <FolderCode size={14} />
-            Create First Project
-          </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={() => navigate("/chat")}>
-          <MessageSquare size={14} />
-          New AI Chat
-        </Button>
-      </div>
-    </div>
+    </motion.div>
   )
 }
