@@ -55,9 +55,6 @@ export default function QuickActions() {
               >
                 <Icon size={18} style={{ color }} />
               </div>
-              <span className="rounded-full border border-[var(--border)] bg-[var(--bg-tertiary)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-tertiary)]">
-                {shortcut}
-              </span>
             </div>
 
             <div className="mt-4 space-y-1.5">
